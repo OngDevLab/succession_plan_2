@@ -1,0 +1,59 @@
+# Succession Planning Tool Configuration
+
+# Skills list for dropdowns
+skills:
+  - "Thinks Strategically"
+  - "Plans and Prioritizes"
+  - "Ensures Accountability"
+  - "Collaborates"
+  - "Instills Trust"
+  - "Drives Engagement"
+  - "Values Differences"
+  - "Business Insight"
+  - "Courage"
+  - "Change Adaptability"
+
+# PLE (Performance Leadership Excellence) list
+ple_options:
+  - "-- Select an Option --"  # Placeholder for required field
+  - "Inspire Individual and Business Success"
+  - "Define Strategies, Priorities, and Expectations"
+  - "Provide Continuous Coaching and Feedback"
+  - "Develop Self and Others and Support Career Aspirations"
+  - "Demonstrate Care and Compassion"
+  - "Create an Environment Where Disney Values are Experienced"
+
+# Database configuration
+database:
+  employee_db: "succession_db.sqlite"
+  succession_plans_db: "succession_plans.sqlite"
+
+# UI Configuration
+ui:
+  page_title: "Succession Planning Tool"
+  layout: "wide"
+  logo_path: "people_insights_logo.png"
+  logo_width: 100
+
+# Avatar/Photo configuration
+avatar:
+  base_url: "https://rostr.disney.com/api/v2/people/{employee_id}/avatars/thumbnail_large"
+  token: "abc4fc58f30914f6d99faa8a31f4d44c"
+  default_width: 50
+  # Full URL template
+  url_template: "https://rostr.disney.com/api/v2/people/{employee_id}/avatars/thumbnail_large?locale=en&token=abc4fc58f30914f6d99faa8a31f4d44c"
+
+# PowerPoint configuration
+powerpoint:
+  slide_width: 10.0  # inches
+  slide_height: 7.5  # inches
+  font_family: "Calibri"
+  title_font_size: 18
+  content_font_size: 12
+  max_text_length: 80
+
+# Form validation rules
+validation:
+  min_search_length: 2
+  max_search_results: 50
+  max_skills_selection: 3

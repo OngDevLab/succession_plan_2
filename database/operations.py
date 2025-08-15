@@ -50,7 +50,7 @@ def get_latest_incumbent_values(employee_id):
                 "top_skills": json.loads(result[2]) if result[2] else [],
                 "top_ple": result[3],
                 "contract_end_date": result[4],
-                "sourcing_strategy": result[5],
+                "sourcing_strategy": json.loads(result[5]) if result[5] else [],
                 "role_type": result[6],
                 "scenario_plan": result[7],
                 "new_position_title": result[8]
@@ -117,7 +117,7 @@ def save_succession_plan(incumbent_data, successor_data, plan_details, assessmen
             json.dumps(plan_details['top_skills']),
             plan_details['top_ple'],
             plan_details.get('contract_end_date'),
-            plan_details['sourcing_strategy'],
+            json.dumps(plan_details['sourcing_strategy']),
             plan_details.get('role_type'),
             plan_details['scenario_plan'],
             plan_details.get('new_position_title'),

@@ -26,7 +26,6 @@ ple_options:
 # Form dropdown options
 form_options:
   sourcing_strategy:
-    - "-- Select an Option --"
     - "Build (Internal hire)"
     - "Redesign: OD Evaluation Needed"
     - "Redesign: OD Evaluation Completed"

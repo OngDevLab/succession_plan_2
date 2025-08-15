@@ -176,7 +176,8 @@ if st.session_state.app_data['incumbent'] and st.session_state.app_data['success
             if success_count == len(successors):
                 st.success(f"✅ Successfully saved {success_count} succession plan record(s) to the database!")
                 st.info(f"🆔 Record IDs: {', '.join([rid[:8] + '...' for rid in saved_record_ids[:3]])}{'...' if len(saved_record_ids) > 3 else ''}")
-                st.balloons()
+                from ui.components import show_mickey_celebration
+                show_mickey_celebration()
             else:
                 st.error(f"❌ Only {success_count} out of {len(successors)} records were saved successfully.")
     

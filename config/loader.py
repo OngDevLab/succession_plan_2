@@ -53,3 +53,4 @@ CONFIG = load_config()
 # Export commonly used values for easy access
 SKILLS_LIST = CONFIG['skills']
 PLE_LIST = CONFIG['ple_options']
+FORM_OPTIONS = CONFIG.get('form_options', {})

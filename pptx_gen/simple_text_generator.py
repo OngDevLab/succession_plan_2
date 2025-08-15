@@ -9,15 +9,16 @@ import io
 from urllib.request import urlopen
 from PIL import Image, ImageDraw
 from config.loader import CONFIG
+from utils.pptx_repair import auto_repair_pptx
 
 def create_succession_plan_from_template(incumbent_data, successors_data):
-    """Create PowerPoint with multiple slides if needed (3 successors per slide)"""
+    """Create PowerPoint with multiple slides if needed (configurable successors per slide)"""
     
     # Load the template
-    prs = Presentation("succession_profile_template.pptx")
+    prs = Presentation(CONFIG['powerpoint']['template_file'])
     
-    # Split successors into groups of 3 (max per slide)
-    successors_per_slide = 3
+    # Split successors into groups (max per slide from config)
+    successors_per_slide = CONFIG['powerpoint']['successors_per_slide']
     successor_groups = []
     for i in range(0, len(successors_data), successors_per_slide):
         successor_groups.append(successors_data[i:i + successors_per_slide])
@@ -30,7 +31,7 @@ def create_succession_plan_from_template(incumbent_data, successors_data):
     # Add additional slides by duplicating the entire template slide
     for group_idx in range(1, len(successor_groups)):
         # Create a new presentation with just the template to copy from
-        temp_prs = Presentation("succession_profile_template.pptx")
+        temp_prs = Presentation(CONFIG['powerpoint']['template_file'])
         template_slide = temp_prs.slides[0]
         
         # Get the slide layout
@@ -52,7 +53,16 @@ def create_succession_plan_from_template(incumbent_data, successors_data):
     pptx_buffer = io.BytesIO()
     prs.save(pptx_buffer)
     pptx_buffer.seek(0)
-    return pptx_buffer
+    
+    # Auto-repair the PowerPoint file if enabled
+    if CONFIG['powerpoint'].get('auto_repair', True):
+        repair_method = CONFIG['powerpoint'].get('repair_method', 'standard')
+        print(f"🔧 Auto-repairing PowerPoint file using {repair_method} method...")
+        repaired_buffer = auto_repair_pptx(pptx_buffer, method=repair_method)
+        return repaired_buffer
+    else:
+        print("⚠️ Auto-repair disabled - returning original file")
+        return pptx_buffer
 
 def copy_slide_elements(source_slide, target_slide):
     """Copy all elements from source slide to target slide"""
@@ -203,7 +213,8 @@ def fill_table_carrot_placeholders_only(table, successors_data):
     """Fill table by replacing ONLY carrot placeholders, DON'T TOUCH HEADERS"""
     
     # Fill each column with successor data
-    for col_idx, successor in enumerate(successors_data[:3]):  # Max 3 successors
+    max_successors = CONFIG['powerpoint']['successors_per_slide']
+    for col_idx, successor in enumerate(successors_data[:max_successors]):  # Max successors per slide
         if col_idx >= len(table.columns):
             break
             
@@ -241,7 +252,8 @@ def fill_table_carrot_placeholders_only(table, successors_data):
             replace_carrot_placeholders_simple(cell, assessment, 'actions')
     
     # Clear unused columns - FORCE LEFT ALIGNMENT on Row 0
-    for col_idx in range(len(successors_data), 3):
+    max_successors = CONFIG['powerpoint']['successors_per_slide']
+    for col_idx in range(len(successors_data), max_successors):
         if col_idx < len(table.columns):
             for row_idx in range(len(table.rows)):
                 if col_idx < len(table.rows[row_idx].cells):
@@ -329,7 +341,8 @@ def clear_carrot_placeholders_keep_headers(cell):
 def replace_with_circular_faces(slide, photo_shapes, incumbent_data, successors_data):
     """Replace photo placeholders with circular cropped faces using config URL"""
     
-    employees = [incumbent_data] + successors_data[:3]
+    max_successors = CONFIG['powerpoint']['successors_per_slide']
+    employees = [incumbent_data] + successors_data[:max_successors]
     
     for i, shape in enumerate(photo_shapes[:len(employees)]):
         if i < len(employees):

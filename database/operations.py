@@ -1,27 +1,25 @@
 """
-Database functions from app_final.py - EXACT COPIES
+Database functions - Using fully configurable queries from config
 """
 
 import streamlit as st
 import pandas as pd
 import sqlite3
 import json
+from config.loader import CONFIG
 
 @st.cache_data(show_spinner="Searching database...")
 def search_employees(last_name):
     """Queries the SQLite database for employees by last name."""
     try:
-        conn = sqlite3.connect("succession_db.sqlite")
-        query = """
-            SELECT
-                SEGMENT_HIER_LEVEL_2_NAME, PREFERRED_NAME_FIRST_NAME,
-                PREFERRED_NAME_LAST_NAME, EMPLOYEE_ID, POSITION_REFERENCE_ID,
-                POSITION_NBR_DESCRIPTION, MANAGEMENT_LEVEL, JOB_LEVEL,
-                DAYS_IN_MGMT_LEVEL, MGMT_LEVEL_GROUP, EMAIL_PRIMARY_WORK
-            FROM employee
-            WHERE LOWER(PREFERRED_NAME_LAST_NAME) LIKE LOWER(?)
-            LIMIT 50;
-        """
+        conn = sqlite3.connect(CONFIG['database']['employee_db'])
+        
+        # Format query with table name and search limit
+        query = CONFIG['queries']['search_employees'].format(
+            employee_table=CONFIG['database']['tables']['employee'],
+            search_limit=CONFIG['database']['limits']['employee_search']
+        )
+        
         df = pd.read_sql_query(query, conn, params=(f"%{last_name}%",))
         conn.close()
         return df.to_dict('records')
@@ -32,18 +30,15 @@ def search_employees(last_name):
 def get_latest_incumbent_values(employee_id):
     """Get the latest incumbent plan values for prepopulation"""
     try:
-        conn = sqlite3.connect("succession_plans.sqlite")
+        conn = sqlite3.connect(CONFIG['database']['succession_plans_db'])
         cursor = conn.cursor()
         
-        cursor.execute("""
-            SELECT CRITICAL_ROLE, RESPONSIBILITIES, INCUMBENT_TOP_SKILLS, INCUMBENT_TOP_PLE,
-                   INCUMBENT_CONTRACT_END_DATE, SOURCING_STRATEGY, ROLE_TYPE, SCENARIO_PLAN,
-                   NEW_POSITION_TITLE
-            FROM succession_plans 
-            WHERE INCUMBENT_EMPLOYEE_ID = ?
-            ORDER BY CREATED_AT DESC 
-            LIMIT 1
-        """, (employee_id,))
+        # Format query with table name
+        query = CONFIG['queries']['get_latest_incumbent_values'].format(
+            succession_plans_table=CONFIG['database']['tables']['succession_plans']
+        )
+        
+        cursor.execute(query, (employee_id,))
         
         result = cursor.fetchone()
         conn.close()
@@ -68,18 +63,15 @@ def get_latest_incumbent_values(employee_id):
 def get_latest_successor_values(employee_id):
     """Get the latest successor assessment values for prepopulation"""
     try:
-        conn = sqlite3.connect("succession_plans.sqlite")
+        conn = sqlite3.connect(CONFIG['database']['succession_plans_db'])
         cursor = conn.cursor()
         
-        cursor.execute("""
-            SELECT SUCCESSOR_READINESS, SUCCESSOR_FUTURE_READINESS_TIMING,
-                   SUCCESSOR_CONTRACT_END_DATE, SUCCESSOR_STRENGTHS, SUCCESSOR_TOP_SKILLS,
-                   SUCCESSOR_TOP_PLE, SUCCESSOR_DEVELOPMENT_FOCUS, SUCCESSOR_TALENT_ACTIONS
-            FROM succession_plans 
-            WHERE SUCCESSOR_EMPLOYEE_ID = ?
-            ORDER BY CREATED_AT DESC 
-            LIMIT 1
-        """, (employee_id,))
+        # Format query with table name
+        query = CONFIG['queries']['get_latest_successor_values'].format(
+            succession_plans_table=CONFIG['database']['tables']['succession_plans']
+        )
+        
+        cursor.execute(query, (employee_id,))
         
         result = cursor.fetchone()
         conn.close()
@@ -103,26 +95,15 @@ def get_latest_successor_values(employee_id):
 def save_succession_plan(incumbent_data, successor_data, plan_details, assessment_details):
     """Save a succession plan record to the database with database-side UUID generation"""
     try:
-        conn = sqlite3.connect("succession_plans.sqlite")
+        conn = sqlite3.connect(CONFIG['database']['succession_plans_db'])
         cursor = conn.cursor()
         
-        # Insert without RECORD_ID - let database generate it
-        cursor.execute("""
-            INSERT INTO succession_plans (
-                INCUMBENT_EMPLOYEE_ID, INCUMBENT_FIRST_NAME, INCUMBENT_LAST_NAME,
-                INCUMBENT_EMAIL, INCUMBENT_POSITION, INCUMBENT_MANAGEMENT_LEVEL,
-                INCUMBENT_JOB_LEVEL, INCUMBENT_SEGMENT,
-                CRITICAL_ROLE, RESPONSIBILITIES, INCUMBENT_TOP_SKILLS, INCUMBENT_TOP_PLE,
-                INCUMBENT_CONTRACT_END_DATE, SOURCING_STRATEGY, ROLE_TYPE, SCENARIO_PLAN,
-                NEW_POSITION_TITLE,
-                SUCCESSOR_EMPLOYEE_ID, SUCCESSOR_FIRST_NAME, SUCCESSOR_LAST_NAME,
-                SUCCESSOR_EMAIL, SUCCESSOR_POSITION, SUCCESSOR_MANAGEMENT_LEVEL,
-                SUCCESSOR_JOB_LEVEL, SUCCESSOR_SEGMENT,
-                SUCCESSOR_READINESS, SUCCESSOR_FUTURE_READINESS_TIMING,
-                SUCCESSOR_CONTRACT_END_DATE, SUCCESSOR_STRENGTHS, SUCCESSOR_TOP_SKILLS,
-                SUCCESSOR_TOP_PLE, SUCCESSOR_DEVELOPMENT_FOCUS, SUCCESSOR_TALENT_ACTIONS
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
+        # Format query with table name
+        query = CONFIG['queries']['save_succession_plan'].format(
+            succession_plans_table=CONFIG['database']['tables']['succession_plans']
+        )
+        
+        cursor.execute(query, (
             incumbent_data['EMPLOYEE_ID'],
             incumbent_data['PREFERRED_NAME_FIRST_NAME'],
             incumbent_data['PREFERRED_NAME_LAST_NAME'],

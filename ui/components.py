@@ -4,7 +4,7 @@ UI functions from app_final.py - EXACT COPIES
 
 import streamlit as st
 import datetime
-from config.loader import SKILLS_LIST, PLE_LIST
+from config.loader import SKILLS_LIST, PLE_LIST, FORM_OPTIONS
 from database.operations import get_latest_incumbent_values, get_latest_successor_values
 
 def load_css():
@@ -23,6 +23,10 @@ def load_css():
                 border-radius: 8px;
                 padding: 8px;
                 margin: 4px 0px;
+            }
+            /* Hide the X button on dialogs */
+            div[aria-label="dialog"]>button[aria-label="Close"] {
+                display: none;
             }
         </style>
     """, unsafe_allow_html=True)
@@ -122,12 +126,32 @@ def display_selected_incumbent_card(incumbent, show_button=True):
             st.markdown(f"**Scenario:** `{plan.get('scenario_plan', 'N/A')}`")
 
             with st.expander("View Additional Plan Details"):
-                st.markdown(f"**Top Demonstrated PLE:**")
+                # 1. Critical Role
+                st.markdown(f"**Critical Role:** {critical_text}")
+                
+                # 2. Contract End Date (Optional)
+                if plan.get('contract_end_date'):
+                    st.markdown(f"**Contract End Date:** {plan.get('contract_end_date')}")
+                else:
+                    st.markdown(f"**Contract End Date:** Not specified")
+                
+                # 4. Top Demonstrated People Leader Expectation
+                st.markdown(f"**Top Demonstrated People Leader Expectation:**")
                 st.info(plan.get('top_ple', 'Not specified.'))
-                st.markdown(f"**Top Skills:**")
+                
+                # 5. Top Leadership Skills
+                st.markdown(f"**Top Leadership Skills:**")
                 st.info(", ".join(plan.get('top_skills', ['Not specified.'])))
-                st.markdown(f"**Responsibilities & Attributes:**")
-                st.info(plan.get('responsibilities', 'Not specified.'))
+                
+                # 6. Talent Sourcing Strategy
+                st.markdown(f"**Talent Sourcing Strategy:** {plan.get('sourcing_strategy', 'Not specified')}")
+                
+                # 7. Scenario Plan
+                st.markdown(f"**Scenario Plan:** {plan.get('scenario_plan', 'Not specified')}")
+                
+                # 8. Type of Role (optional)
+                if plan.get('role_type') and plan.get('role_type') != 'Not Applicable':
+                    st.markdown(f"**Type of Role:** {plan.get('role_type')}")
 
     if show_button:
         b_col1, b_col2 = st.columns(2)
@@ -164,30 +188,40 @@ def display_incumbent_form():
             plan_details = previous_values
 
     with st.form("incumbent_form"):
+        # 1. Critical Role
         critical_role = st.radio("Critical Role?", ["Yes", "No"], horizontal=True, index=0 if plan_details.get("critical_role") else 1 if 'critical_role' in plan_details else None)
-        responsibilities = st.text_area("Role Responsibilities & Key attributes:", value=plan_details.get("responsibilities", ""))
         
+        # 2. Contract End Date (Optional)
+        contract_end_date_str = plan_details.get("contract_end_date")
+        contract_end_date_val = datetime.datetime.strptime(contract_end_date_str, "%Y-%m-%d").date() if contract_end_date_str else None
+        contract_end_date = st.date_input("Contract End Date (optional):", value=contract_end_date_val)
+        
+        # 3. Role Responsibilities & Key Attributes
+        responsibilities = st.text_area("Role Responsibilities & Key Attributes:", value=plan_details.get("responsibilities", ""))
+        
+        # 4. Top Demonstrated People Leader Expectation
+        top_ple = st.selectbox("Top Demonstrated People Leader Expectation:", PLE_LIST, index=PLE_LIST.index(plan_details.get("top_ple")) if plan_details.get("top_ple") in PLE_LIST else 0)
+        
+        # 5. Top Leadership Skills (select three)
         # Safety check for top_skills
         default_skills = plan_details.get("top_skills", [])
         if isinstance(default_skills, str):
             default_skills = [skill.strip() for skill in default_skills.split(',') if skill.strip()]
         valid_default_skills = [skill for skill in default_skills if skill in SKILLS_LIST]
         
-        top_skills = st.multiselect("Top Skills (select up to 3):", SKILLS_LIST, default=valid_default_skills, max_selections=3)
-        top_ple = st.selectbox("Top Demonstrated PLE:", PLE_LIST, index=PLE_LIST.index(plan_details.get("top_ple")) if plan_details.get("top_ple") in PLE_LIST else 0)
+        top_skills = st.multiselect("Top Leadership Skills (select three):", SKILLS_LIST, default=valid_default_skills, max_selections=3)
         
-        contract_end_date_str = plan_details.get("contract_end_date")
-        contract_end_date_val = datetime.datetime.strptime(contract_end_date_str, "%Y-%m-%d").date() if contract_end_date_str else None
-        contract_end_date = st.date_input("Contract End Date (optional):", value=contract_end_date_val)
+        # 6. Talent Sourcing Strategy
+        sourcing_options = FORM_OPTIONS.get('sourcing_strategy', ["-- Select an Option --", "Build (Internal hire)", "External"])
+        sourcing_strategy = st.selectbox("Talent Sourcing Strategy:", sourcing_options, index=sourcing_options.index(plan_details.get("sourcing_strategy")) if plan_details.get("sourcing_strategy") in sourcing_options else 0)
         
-        sourcing_options = ["-- Select an Option --", "Build (Internal hire)", "Redesign: OD Evaluation Needed", "Redesign: OD Evaluation Completed", "External"]
-        sourcing_strategy = st.selectbox("Talent sourcing strategy:", sourcing_options, index=sourcing_options.index(plan_details.get("sourcing_strategy")) if plan_details.get("sourcing_strategy") in sourcing_options else 0)
-        
-        role_type_options = ["Not Applicable", "Succession Plan", "Talent Pool", "Redesign", "External", "No Talent backfill required"]
-        role_type = st.selectbox("Type of role (optional):", role_type_options, index=role_type_options.index(plan_details.get("role_type")) if plan_details.get("role_type") in role_type_options else 0)
-
-        scenario_options = ["-- Select an Option --", "Direct Backfill", "Split Position/New Position"]
+        # 7. Scenario Plan
+        scenario_options = FORM_OPTIONS.get('scenario_plan', ["-- Select an Option --", "Direct Backfill", "Split Position/New Position"])
         scenario_plan = st.selectbox("Scenario Plan:", scenario_options, index=scenario_options.index(plan_details.get("scenario_plan")) if plan_details.get("scenario_plan") in scenario_options else 0)
+        
+        # 8. Type of Role (optional)
+        role_type_options = FORM_OPTIONS.get('role_type', ["Not Applicable", "Succession Plan", "External"])
+        role_type = st.selectbox("Type of Role (optional):", role_type_options, index=role_type_options.index(plan_details.get("role_type")) if plan_details.get("role_type") in role_type_options else 0)
         
         new_position_title = ""
         if scenario_plan == 'Split Position/New Position':
@@ -233,7 +267,7 @@ def display_incumbent_form():
                 st.session_state.editing_incumbent = False
                 st.rerun()
 
-@st.dialog("Successor Assessment", width="large")
+@st.dialog("Successor Plan", width="large")
 def display_successor_form():
     is_editing = st.session_state.editing_successor_index is not None
     
@@ -253,30 +287,41 @@ def display_successor_form():
             assessment = previous_values
 
     with st.form("successor_form"):
-        readiness_options = ["-- Select an Option --", "Ready Now", "Ready Future"]
-        readiness = st.selectbox("Readiness level:", readiness_options, index=readiness_options.index(assessment.get("readiness")) if assessment.get("readiness") in readiness_options else 0)
-        
-        future_readiness_timing = None
-        if readiness == "Ready Future":
-            timing_options = ["-- Select an Option --", "+1 to < 2 years", "+2 to < 3 years", "+3 to < 5 years"]
-            future_readiness_timing = st.selectbox("Future Readiness Timing:", timing_options, index=timing_options.index(assessment.get("future_readiness_timing")) if assessment.get("future_readiness_timing") in timing_options else 0)
-
+        # 1. Contract End Date (optional)
         contract_end_date_str = assessment.get("contract_end_date")
         contract_end_date_val = datetime.datetime.strptime(contract_end_date_str, "%Y-%m-%d").date() if contract_end_date_str else None
         contract_end_date = st.date_input("Contract End Date (optional):", value=contract_end_date_val)
+        
+        # 2. Readiness Level
+        readiness_options = FORM_OPTIONS.get('readiness_level', ["-- Select an Option --", "Ready Now", "Ready Future"])
+        readiness = st.selectbox("Readiness Level:", readiness_options, index=readiness_options.index(assessment.get("readiness")) if assessment.get("readiness") in readiness_options else 0)
+        
+        # 3. Future Readiness Timing (optional)
+        future_readiness_timing = None
+        if readiness == "Ready Future":
+            timing_options = FORM_OPTIONS.get('future_readiness_timing', ["-- Select an Option --", "+1 to < 2 years", "+2 to < 3 years", "+3 to < 5 years"])
+            future_readiness_timing = st.selectbox("Future Readiness Timing (optional):", timing_options, index=timing_options.index(assessment.get("future_readiness_timing")) if assessment.get("future_readiness_timing") in timing_options else 0)
 
+        # 4. Strengths
         strengths = st.text_area("Strengths:", value=assessment.get("strengths", ""))
         
+        # 5. Top Demonstrated People Leader Expectations
+        top_ple = st.selectbox("Top Demonstrated People Leader Expectations:", PLE_LIST, index=PLE_LIST.index(assessment.get("top_ple")) if assessment.get("top_ple") in PLE_LIST else 0)
+        
+        # 6. Top Leadership Skills
         # Safety check for top_skills
         default_skills = assessment.get("top_skills", [])
         if isinstance(default_skills, str):
             default_skills = [skill.strip() for skill in default_skills.split(',') if skill.strip()]
         valid_default_skills = [skill for skill in default_skills if skill in SKILLS_LIST]
         
-        top_skills = st.multiselect("Top Skills (select up to 3):", SKILLS_LIST, default=valid_default_skills, max_selections=3)
-        top_ple = st.selectbox("Top Demonstrated PLE:", PLE_LIST, index=PLE_LIST.index(assessment.get("top_ple")) if assessment.get("top_ple") in PLE_LIST else 0)
+        top_skills = st.multiselect("Top Leadership Skills:", SKILLS_LIST, default=valid_default_skills, max_selections=3)
+        
+        # 7. Development Focus & Opportunities
         development_focus = st.text_area("Development Focus & Opportunities:", value=assessment.get("development_focus", ""))
-        talent_actions = st.text_area("Talent Actions:", value=assessment.get("talent_actions", ""))
+        
+        # 8. Talent Development Actions
+        talent_actions = st.text_area("Talent Development Actions:", value=assessment.get("talent_actions", ""))
 
         col1, col2 = st.columns(2)
         with col1:
@@ -286,10 +331,10 @@ def display_successor_form():
                 if readiness == "-- Select an Option --": errors.append("Please select a Readiness Level.")
                 if readiness == "Ready Future" and (future_readiness_timing is None or future_readiness_timing == "-- Select an Option --"): errors.append("Please select a Future Readiness Timing.")
                 if not strengths: errors.append("Please enter Successor Strengths.")
-                if not top_skills: errors.append("Please select at least 1 Top Skill (up to 3) for the Successor.")
-                if top_ple == "-- Select an Option --": errors.append("Please select a Top Demonstrated PLE for the Successor.")
-                if not development_focus: errors.append("Please enter a Development Focus.")
-                if not talent_actions: errors.append("Please enter Talent Actions.")
+                if not top_skills: errors.append("Please select at least 1 Top Leadership Skill for the Successor.")
+                if top_ple == "-- Select an Option --": errors.append("Please select a Top Demonstrated People Leader Expectation for the Successor.")
+                if not development_focus: errors.append("Please enter Development Focus & Opportunities.")
+                if not talent_actions: errors.append("Please enter Talent Development Actions.")
                 
                 if errors:
                     for error in errors:

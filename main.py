@@ -23,6 +23,7 @@ from ui.components import (
     display_selected_incumbent_card, display_incumbent_form, display_successor_form
 )
 from utils.helpers import force_page_reload, initialize_state
+from utils.pptx_repair import auto_repair_pptx
 from pptx_gen.simple_text_generator import create_succession_plan_from_template
 
 # --- Page and State Configuration ---
@@ -95,19 +96,36 @@ if st.session_state.app_data['successors'] or st.session_state.app_data['incumbe
                             st.markdown(f"**{name}**")
                             st.caption(f"Readiness: {readiness}")
                             
-                            with st.expander("View Assessment Details"):
+                            with st.expander("View Plan Details"):
+                                # 1. Contract End Date (optional)
+                                if assessment.get('contract_end_date'):
+                                    st.markdown(f"**Contract End Date:** {assessment.get('contract_end_date')}")
+                                
+                                # 2. Readiness Level
                                 st.markdown(f"**Readiness Level:** {assessment.get('readiness', 'Not specified')}")
+                                
+                                # 3. Future Readiness Timing (optional)
                                 if assessment.get('future_readiness_timing'):
-                                    st.markdown(f"**Future Timing:** {assessment.get('future_readiness_timing')}")
-                                st.markdown(f"**Top Demonstrated PLE:**")
-                                st.info(assessment.get('top_ple', 'Not specified.'))
-                                st.markdown(f"**Top Skills:**")
-                                st.info(", ".join(assessment.get('top_skills', ['Not specified.'])))
+                                    st.markdown(f"**Future Readiness Timing:** {assessment.get('future_readiness_timing')}")
+                                
+                                # 4. Strengths
                                 st.markdown(f"**Strengths:**")
                                 st.info(assessment.get('strengths', 'Not specified.'))
-                                st.markdown(f"**Development Focus:**")
+                                
+                                # 5. Top Demonstrated People Leader Expectations
+                                st.markdown(f"**Top Demonstrated People Leader Expectations:**")
+                                st.info(assessment.get('top_ple', 'Not specified.'))
+                                
+                                # 6. Top Leadership Skills
+                                st.markdown(f"**Top Leadership Skills:**")
+                                st.info(", ".join(assessment.get('top_skills', ['Not specified.'])))
+                                
+                                # 7. Development Focus & Opportunities
+                                st.markdown(f"**Development Focus & Opportunities:**")
                                 st.info(assessment.get('development_focus', 'Not specified.'))
-                                st.markdown(f"**Talent Actions:**")
+                                
+                                # 8. Talent Development Actions
+                                st.markdown(f"**Talent Development Actions:**")
                                 st.info(assessment.get('talent_actions', 'Not specified.'))
                             
                             c1, c2 = st.columns(2)
@@ -167,16 +185,25 @@ if st.session_state.app_data['incumbent'] and st.session_state.app_data['success
         if 'pptx_data' not in st.session_state:
             st.session_state.pptx_data = None
         
-        # Generate button
+        # Generate PowerPoint button (includes automatic repair)
         if st.button("📊 Generate PowerPoint", use_container_width=True, key="generate_pptx"):
             try:
                 with st.spinner("Generating PowerPoint..."):
+                    # Generate the PowerPoint
                     pptx_buffer = create_succession_plan_from_template(
                         st.session_state.app_data['incumbent'],
                         st.session_state.app_data['successors']
                     )
-                    st.session_state.pptx_data = pptx_buffer.getvalue()
-                    st.success("✅ PowerPoint generated! Download button below.")
+                    
+                    # Always run additional repair step for extra cleaning
+                    with st.spinner("Applying final repairs and optimizations..."):
+                        import io
+                        # Apply temp_file repair method for extra thorough cleaning
+                        final_buffer = auto_repair_pptx(pptx_buffer, method="temp_file")
+                        st.session_state.pptx_data = final_buffer.getvalue()
+                    
+                    st.success("✅ PowerPoint generated and optimized! Download button below.")
+                    
             except Exception as e:
                 st.error(f"Error creating PowerPoint: {e}")
         

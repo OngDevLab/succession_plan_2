@@ -175,13 +175,9 @@ def display_selected_incumbent_card(incumbent, show_button=True):
     if show_button:
         b_col1, b_col2 = st.columns(2)
         with b_col1:
-            if st.button("Change Incumbent", use_container_width=True, help="Select a different incumbent."):
-                st.session_state.app_data['incumbent'] = None
-                st.session_state.selected_person = None
-                st.session_state.search_term = ""
-                st.session_state.editing_incumbent = False
-                st.session_state.editing_successor_index = None
-                st.rerun()
+            if st.button("🔄 Start Over", use_container_width=True, help="Start a new succession plan from the beginning."):
+                from utils.helpers import force_page_reload
+                force_page_reload()
         with b_col2:
             if st.button("Edit Details", use_container_width=True, help="Edit the plan details for the current incumbent."):
                 st.session_state.editing_incumbent = True

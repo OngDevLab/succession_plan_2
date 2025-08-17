@@ -1,12 +1,13 @@
 """
 Simple PowerPoint generator - add plain text after headers, left-aligned, no expansion
 """
-
+import ssl
+import certifi
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 from pptx.enum.text import PP_ALIGN
 import io
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 from PIL import Image, ImageDraw
 from config.loader import CONFIG
 from utils.pptx_repair import auto_repair_pptx
@@ -352,7 +353,13 @@ def replace_with_circular_faces(slide, photo_shapes, incumbent_data, successors_
             try:
                 # Use URL from config
                 photo_url = CONFIG['avatar']['url_template'].format(employee_id=employee_id)
-                with urlopen(photo_url) as response:
+                req = Request(photo_url)
+                req.add_header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+                
+                #certify ca cert
+                context = ssl.create_default_context(cafile=certifi.where())
+
+                with urlopen(req, context=context) as response:
                     photo_data = response.read()
                 
                 # Create circular image using PIL

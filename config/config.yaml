@@ -62,22 +62,34 @@ database:
   
   # Table names
   tables:
-    employee: "employee"
+    incumbents: "incumbents"
+    successors: "successors"
     succession_plans: "succession_plans"
   
   # Search limits
   limits:
-    employee_search: 50
+    incumbent_search: 50
+    successor_search: 50
 
 # Database queries (using table names from config)
 queries:
-  search_employees: |
+  search_incumbents: |
     SELECT
         SEGMENT_HIER_LEVEL_2_NAME, PREFERRED_NAME_FIRST_NAME,
         PREFERRED_NAME_LAST_NAME, EMPLOYEE_ID, POSITION_REFERENCE_ID,
         POSITION_NBR_DESCRIPTION, MANAGEMENT_LEVEL, JOB_LEVEL,
         DAYS_IN_MGMT_LEVEL, MGMT_LEVEL_GROUP, EMAIL_PRIMARY_WORK
-    FROM {employee_table}
+    FROM {incumbents_table}
+    WHERE LOWER(PREFERRED_NAME_LAST_NAME) LIKE LOWER(?)
+    LIMIT {search_limit};
+  
+  search_successors: |
+    SELECT
+        SEGMENT_HIER_LEVEL_2_NAME, PREFERRED_NAME_FIRST_NAME,
+        PREFERRED_NAME_LAST_NAME, EMPLOYEE_ID, POSITION_REFERENCE_ID,
+        POSITION_NBR_DESCRIPTION, MANAGEMENT_LEVEL, JOB_LEVEL,
+        DAYS_IN_MGMT_LEVEL, MGMT_LEVEL_GROUP, EMAIL_PRIMARY_WORK
+    FROM {successors_table}
     WHERE LOWER(PREFERRED_NAME_LAST_NAME) LIKE LOWER(?)
     LIMIT {search_limit};
   

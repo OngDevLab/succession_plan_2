@@ -17,7 +17,7 @@ import io
 
 # Import from modules
 from config.loader import SKILLS_LIST, PLE_LIST, CONFIG
-from database.operations import search_employees, save_succession_plan
+from database.operations import search_incumbents, search_successors, search_employees, save_succession_plan
 from ui.components import (
     load_css, display_sidebar_summary, display_search_box, display_search_results,
     display_selected_incumbent_card, display_incumbent_form, display_successor_form
@@ -58,10 +58,14 @@ if show_incumbent_dialog:
 elif st.session_state.app_data['incumbent']:
     display_selected_incumbent_card(st.session_state.app_data['incumbent'])
 else:
+    # Always clear selected_person when we're in the search state to ensure search box shows
+    if st.session_state.selected_person:
+        st.session_state.selected_person = None
+    
     st.info("Search for the employee you want to create a succession plan for.")
     display_search_box("incumbent")
     if st.session_state.search_term:
-        results = search_employees(st.session_state.search_term)
+        results = search_incumbents(st.session_state.search_term)
         if results:
             display_search_results(results, "incumbent")
         else:
@@ -143,7 +147,7 @@ if st.session_state.app_data['successors'] or st.session_state.app_data['incumbe
             st.info("Search for potential successors to add to the plan.")
             display_search_box("successor")
             if st.session_state.search_term:
-                results = search_employees(st.session_state.search_term)
+                results = search_successors(st.session_state.search_term)
                 if results:
                     display_search_results(results, "successor")
                 else:
@@ -151,6 +155,10 @@ if st.session_state.app_data['successors'] or st.session_state.app_data['incumbe
 
 # --- SUBMIT SECTION - EXACT COPY FROM app_final.py ---
 if st.session_state.app_data['incumbent'] and st.session_state.app_data['successors']:
+    # Only clear selected_person if we're not actively showing a successor form
+    if st.session_state.selected_person and not show_successor_dialog:
+        st.session_state.selected_person = None
+    
     st.divider()
     
     col1, col2 = st.columns(2)

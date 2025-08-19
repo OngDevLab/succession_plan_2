@@ -9,15 +9,15 @@ import json
 from config.loader import CONFIG
 
 @st.cache_data(show_spinner="Searching database...")
-def search_employees(last_name):
-    """Queries the SQLite database for employees by last name."""
+def search_incumbents(last_name):
+    """Queries the SQLite database for incumbents by last name."""
     try:
         conn = sqlite3.connect(CONFIG['database']['employee_db'])
         
         # Format query with table name and search limit
-        query = CONFIG['queries']['search_employees'].format(
-            employee_table=CONFIG['database']['tables']['employee'],
-            search_limit=CONFIG['database']['limits']['employee_search']
+        query = CONFIG['queries']['search_incumbents'].format(
+            incumbents_table=CONFIG['database']['tables']['incumbents'],
+            search_limit=CONFIG['database']['limits']['incumbent_search']
         )
         
         df = pd.read_sql_query(query, conn, params=(f"%{last_name}%",))
@@ -26,6 +26,31 @@ def search_employees(last_name):
     except Exception as e:
         st.error(f"Database error: {e}")
         return []
+
+@st.cache_data(show_spinner="Searching database...")
+def search_successors(last_name):
+    """Queries the SQLite database for successors by last name."""
+    try:
+        conn = sqlite3.connect(CONFIG['database']['employee_db'])
+        
+        # Format query with table name and search limit
+        query = CONFIG['queries']['search_successors'].format(
+            successors_table=CONFIG['database']['tables']['successors'],
+            search_limit=CONFIG['database']['limits']['successor_search']
+        )
+        
+        df = pd.read_sql_query(query, conn, params=(f"%{last_name}%",))
+        conn.close()
+        return df.to_dict('records')
+    except Exception as e:
+        st.error(f"Database error: {e}")
+        return []
+
+# Keep the old function for backward compatibility, but make it search successors
+@st.cache_data(show_spinner="Searching database...")
+def search_employees(last_name):
+    """Queries the SQLite database for employees by last name. (Legacy function - now searches successors)"""
+    return search_successors(last_name)
 
 def get_latest_incumbent_values(employee_id):
     """Get the latest incumbent plan values for prepopulation"""

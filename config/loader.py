@@ -54,3 +54,4 @@ CONFIG = load_config()
 SKILLS_LIST = CONFIG['skills']
 PLE_LIST = CONFIG['ple_options']
 FORM_OPTIONS = CONFIG.get('form_options', {})
+AVATAR_URL = CONFIG['avatar']['url_template']

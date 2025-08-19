@@ -11,7 +11,7 @@ from urllib.request import Request, urlopen
 from PIL import Image, ImageDraw
 from config.loader import CONFIG
 from utils.pptx_repair import auto_repair_pptx
-
+from utils.rostr_avatar import get_rostr_avatar
 def create_succession_plan_from_template(incumbent_data, successors_data):
     """Create PowerPoint with multiple slides if needed (configurable successors per slide)"""
     
@@ -351,20 +351,8 @@ def replace_with_circular_faces(slide, photo_shapes, incumbent_data, successors_
             employee_id = employee['metadata']['EMPLOYEE_ID']
             
             try:
-                # Use URL from config
-                photo_url = CONFIG['avatar']['url_template'].format(employee_id=employee_id)
-                req = Request(photo_url)
-                req.add_header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
-                
-                #certify ca cert
-                context = ssl.create_default_context(cafile=certifi.where())
-
-                with urlopen(req, context=context) as response:
-                    photo_data = response.read()
-                
                 # Create circular image using PIL
-                circular_photo_data = create_circular_image(photo_data)
-                
+                circular_photo_data = create_circular_image(get_rostr_avatar(employee['metadata']['EMPLOYEE_ID']))
                 # Get original position and size
                 left = shape.left
                 top = shape.top

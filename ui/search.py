@@ -3,6 +3,7 @@ Search and employee selection components
 """
 
 import streamlit as st
+from utils.rostr_avatar import get_rostr_avatar
 
 def display_search_box(role):
     with st.form(key=f"{role}_search_form"):
@@ -20,7 +21,10 @@ def display_search_results(results, role):
         cols = st.columns([1, 6, 2])
         full_name = f"{person['PREFERRED_NAME_FIRST_NAME']} {person['PREFERRED_NAME_LAST_NAME']}"
         with cols[0]:
-            st.image(f"https://rostr.disney.com/api/v2/people/{person['EMPLOYEE_ID']}/avatars/thumbnail_large?locale=en&token=abc4fc58f30914f6d99faa8a31f4d44c", width=50)
+            try:
+                st.image(get_rostr_avatar(person['EMPLOYEE_ID']))
+            except:
+                pass
         with cols[1]:
             st.markdown(f"<div style='padding-top: 5px;'><strong>{full_name}</strong><br><span style='font-size: 0.9em; color: gray;'>{person['EMAIL_PRIMARY_WORK']}</span></div>", unsafe_allow_html=True)
         with cols[2]:

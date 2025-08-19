@@ -3,7 +3,7 @@ Card display components for incumbents and successors
 """
 
 import streamlit as st
-
+from utils.rostr_avatar import get_rostr_avatar
 def display_selected_incumbent_card(incumbent, show_button=True):
     person = incumbent['metadata']
     plan = incumbent['plan_details']
@@ -15,7 +15,10 @@ def display_selected_incumbent_card(incumbent, show_button=True):
     with st.container(border=True):
         c1, c2 = st.columns([1, 5])
         with c1:
-            st.image(f"https://rostr.disney.com/api/v2/people/{person['EMPLOYEE_ID']}/avatars/thumbnail_large?locale=en&token=abc4fc58f30914f6d99faa8a31f4d44c", width=100)
+            try:
+                st.image(get_rostr_avatar(person['EMPLOYEE_ID']), width=100)
+            except:
+                pass
         with c2:
             st.markdown(f"### {full_name}")
             st.markdown(f"**Position:** {person['POSITION_NBR_DESCRIPTION']}")

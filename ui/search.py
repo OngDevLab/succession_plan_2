@@ -1,22 +1,108 @@
 """
-Search and employee selection components
+Search and employee selection components with enhanced search types
 """
 
 import streamlit as st
 from utils.rostr_avatar import get_rostr_avatar
+from config.loader import CONFIG
 
 def display_search_box(role):
-    with st.form(key=f"{role}_search_form"):
-        col1, col2 = st.columns([4, 1])
-        with col1:
-            search_input = st.text_input("Search by Last Name", value="", label_visibility="collapsed", placeholder="Search by Last Name")
-        with col2:
-            if st.form_submit_button("Search") and search_input:
-                st.session_state.search_term = search_input
+    """Display search box with toggle selector for search type"""
+    
+    # Get search configuration
+    search_config = CONFIG.get('search', {})
+    available_types = search_config.get('available_types', [
+        {"name": "last_name", "display_name": "Last Name", "placeholder": "Enter last name..."},
+        {"name": "full_name", "display_name": "Full Name", "placeholder": "Enter full name..."}
+    ])
+    default_type = search_config.get('default_type', 'last_name')
+    
+    # Initialize search type in session state
+    search_type_key = f"search_type_{role}"
+    if search_type_key not in st.session_state:
+        st.session_state[search_type_key] = default_type
+    
+    # Toggle selector above the search form
+    st.markdown("**Search Type:**")
+    
+    # Create toggle buttons
+    col1, col2, col_spacer = st.columns([1, 1, 2])
+    
+    current_type = st.session_state[search_type_key]
+    
+    with col1:
+        if st.button(
+            "Last Name", 
+            key=f"toggle_last_name_{role}",
+            type="primary" if current_type == "last_name" else "secondary",
+            use_container_width=True
+        ):
+            if current_type != "last_name":
+                st.session_state[search_type_key] = "last_name"
+                st.session_state.search_term = ""  # Clear search when switching
                 st.rerun()
+    
+    with col2:
+        if st.button(
+            "Full Name", 
+            key=f"toggle_full_name_{role}",
+            type="primary" if current_type == "full_name" else "secondary",
+            use_container_width=True
+        ):
+            if current_type != "full_name":
+                st.session_state[search_type_key] = "full_name"
+                st.session_state.search_term = ""  # Clear search when switching
+                st.rerun()
+    
+    # Get current type configuration for placeholder
+    current_type_config = next((t for t in available_types if t['name'] == current_type), available_types[0])
+    
+    # Search form with proper alignment
+    with st.form(key=f"{role}_search_form"):
+        col_search, col_button = st.columns([4, 1])
+        
+        with col_search:
+            # Get placeholder text for current search type
+            current_type_config = next((t for t in available_types if t['name'] == current_type), available_types[0])
+            placeholder = current_type_config.get('placeholder', 'Enter search term...')
+            
+            search_input = st.text_input(
+                "Search Term", 
+                value="", 
+                label_visibility="collapsed", 
+                placeholder=placeholder,
+                help=f"Current mode: {current_type_config['display_name']} - {current_type_config.get('placeholder', '')}"
+            )
+        
+        with col_button:
+            search_clicked = st.form_submit_button("Search", use_container_width=True)
+        
+        if search_clicked and search_input:
+            st.session_state.search_term = search_input
+            st.session_state.current_search_type = current_type
+            st.rerun()
+    
+    # Display current search mode info
+    if current_type == "full_name":
+        st.info("**Full Name Search**: Enter first and last name together (e.g., 'John Smith', 'Smith John', or just 'John')")
+    else:
+        st.info("**Last Name Search**: Enter last name only (e.g., 'Smith', 'Johnson')")
 
 def display_search_results(results, role):
-    st.markdown("#### Search Results")
+    """Display search results with current search type information"""
+    
+    # Display results count and search type
+    search_type = st.session_state.get('current_search_type', 'last_name')
+    search_type_display = "Full Name" if search_type == "full_name" else "Last Name"
+    
+    st.markdown(f"#### Search Results")
+    
+    # Show search type badge
+    if search_type == "full_name":
+        st.success(f"Found {len(results)} results using **Full Name** search")
+    else:
+        st.success(f"Found {len(results)} results using **Last Name** search")
+    
     for i, person in enumerate(results):
         cols = st.columns([1, 6, 2])
         full_name = f"{person['PREFERRED_NAME_FIRST_NAME']} {person['PREFERRED_NAME_LAST_NAME']}"

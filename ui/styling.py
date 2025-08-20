@@ -21,9 +21,5 @@ def load_css():
                 padding: 8px;
                 margin: 4px 0px;
             }
-            /* Hide the X button on dialogs */
-            div[aria-label="dialog"]>button[aria-label="Close"] {
-                display: none;
-            }
         </style>
     """, unsafe_allow_html=True)

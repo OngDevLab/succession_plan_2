@@ -7,59 +7,31 @@ import pandas as pd
 import json
 from config.loader import CONFIG
 
-# Try to import snowflake connector
-try:
-    import snowflake.connector
-    from snowflake.connector.pandas_tools import write_pandas
-    SNOWFLAKE_AVAILABLE = True
-except ImportError:
-    SNOWFLAKE_AVAILABLE = False
-    st.error("Snowflake connector not installed. Please install: pip install snowflake-connector-python")
+# Snowflake is available through st.connection
+SNOWFLAKE_AVAILABLE = True
+
+def safe_json_parse(json_str, default=None):
+    """Safely parse JSON string, return default if parsing fails"""
+    if not json_str:
+        return default
+    try:
+        return json.loads(json_str)
+    except (json.JSONDecodeError, TypeError):
+        return default
 
 def get_snowflake_connection():
-    """Create and return a Snowflake connection using configuration or secrets"""
-    if not SNOWFLAKE_AVAILABLE:
-        raise Exception("Snowflake connector not available")
-    
+    """Create and return a Snowflake connection using st.connection"""
     try:
-        # Try to get connection parameters from Streamlit secrets first
-        if hasattr(st, 'secrets') and 'snowflake' in st.secrets:
-            conn_params = {
-                'account': st.secrets.snowflake.account,
-                'user': st.secrets.snowflake.user,
-                'password': st.secrets.snowflake.password,
-                'warehouse': st.secrets.snowflake.warehouse,
-                'database': st.secrets.snowflake.database,
-                'schema': st.secrets.snowflake.schema,
-            }
-        else:
-            # Fallback to environment variables or config
-            import os
-            conn_params = {
-                'account': os.getenv('SNOWFLAKE_ACCOUNT', CONFIG['database']['snowflake']['account']),
-                'user': os.getenv('SNOWFLAKE_USER', CONFIG['database']['snowflake']['user']),
-                'password': os.getenv('SNOWFLAKE_PASSWORD', CONFIG['database']['snowflake']['password']),
-                'warehouse': os.getenv('SNOWFLAKE_WAREHOUSE', CONFIG['database']['snowflake']['warehouse']),
-                'database': os.getenv('SNOWFLAKE_DATABASE', CONFIG['database']['snowflake']['database']),
-                'schema': os.getenv('SNOWFLAKE_SCHEMA', CONFIG['database']['snowflake']['schema']),
-            }
-        
-        # Validate that we have all required parameters
-        required_params = ['account', 'user', 'password', 'warehouse', 'database', 'schema']
-        missing_params = [param for param in required_params if not conn_params.get(param)]
-        
-        if missing_params:
-            raise Exception(f"Missing Snowflake connection parameters: {', '.join(missing_params)}")
-        
-        return snowflake.connector.connect(**conn_params)
-        
+        # Use Streamlit's built-in connection method (like your working code)
+        conn = st.connection("snowflake", type="snowflake")
+        return conn
     except Exception as e:
         st.error(f"Failed to connect to Snowflake: {e}")
         raise
 
 @st.cache_data(show_spinner="Searching Snowflake database...")
-def search_incumbents_snowflake(last_name):
-    """Queries Snowflake for incumbents by last name."""
+def search_incumbents_snowflake(search_term, search_type="last_name"):
+    """Queries Snowflake for incumbents by last name or full name."""
     if not SNOWFLAKE_AVAILABLE:
         st.error("Snowflake connector not available")
         return []
@@ -67,14 +39,20 @@ def search_incumbents_snowflake(last_name):
     try:
         conn = get_snowflake_connection()
         
+        # Choose the appropriate query based on search type
+        if search_type == "full_name":
+            query_key = 'search_incumbents_full_name'
+        else:
+            query_key = 'search_incumbents'
+        
         # Format query with table name and search limit
-        query = CONFIG['queries']['snowflake']['search_incumbents'].format(
+        query = CONFIG['queries']['snowflake'][query_key].format(
             incumbents_table=CONFIG['database']['snowflake']['tables']['incumbents'],
             search_limit=CONFIG['database']['limits']['incumbent_search']
         )
         
         # Execute query with parameterized search term
-        df = pd.read_sql_query(query, conn, params=[f"%{last_name}%"])
+        df = pd.read_sql_query(query, conn, params=[f"%{search_term}%"])
         conn.close()
         return df.to_dict('records')
         
@@ -83,8 +61,8 @@ def search_incumbents_snowflake(last_name):
         return []
 
 @st.cache_data(show_spinner="Searching Snowflake database...")
-def search_successors_snowflake(last_name):
-    """Queries Snowflake for successors by last name."""
+def search_successors_snowflake(search_term, search_type="last_name"):
+    """Queries Snowflake for successors by last name or full name."""
     if not SNOWFLAKE_AVAILABLE:
         st.error("Snowflake connector not available")
         return []
@@ -92,14 +70,20 @@ def search_successors_snowflake(last_name):
     try:
         conn = get_snowflake_connection()
         
+        # Choose the appropriate query based on search type
+        if search_type == "full_name":
+            query_key = 'search_successors_full_name'
+        else:
+            query_key = 'search_successors'
+        
         # Format query with table name and search limit
-        query = CONFIG['queries']['snowflake']['search_successors'].format(
+        query = CONFIG['queries']['snowflake'][query_key].format(
             successors_table=CONFIG['database']['snowflake']['tables']['successors'],
             search_limit=CONFIG['database']['limits']['successor_search']
         )
         
         # Execute query with parameterized search term
-        df = pd.read_sql_query(query, conn, params=[f"%{last_name}%"])
+        df = pd.read_sql_query(query, conn, params=[f"%{search_term}%"])
         conn.close()
         return df.to_dict('records')
         
@@ -109,23 +93,19 @@ def search_successors_snowflake(last_name):
 
 def get_latest_incumbent_values_snowflake(employee_id):
     """Get the latest incumbent plan values for prepopulation from Snowflake"""
-    if not SNOWFLAKE_AVAILABLE:
-        return None
-    
     try:
         conn = get_snowflake_connection()
-        cursor = conn.cursor()
         
         # Format query with table name
         query = CONFIG['queries']['snowflake']['get_latest_incumbent_values'].format(
             succession_plans_table=CONFIG['database']['snowflake']['tables']['succession_plans']
         )
         
-        cursor.execute(query, [employee_id])
-        result = cursor.fetchone()
-        conn.close()
+        # Execute query using st.connection
+        df = conn.query(query, params=(employee_id,))
         
-        if result:
+        if not df.empty:
+            result = df.iloc[0].to_list()
             return {
                 "critical_role": result[0],
                 "responsibilities": result[1],
@@ -165,7 +145,42 @@ def get_latest_successor_values_snowflake(employee_id):
             return {
                 "readiness": result[0],
                 "future_readiness_timing": result[1],
-                "contract_end_date": result[2],
+                # "contract_end_date": result["contract_end_date": result[2],],  # Excluded to keep clear (x) button
+                "strengths": result[3],
+                "top_skills": json.loads(result[4]) if result[4] else [],
+                "top_ple": result[5],
+                "development_focus": result[6],
+                "talent_actions": result[7]
+            }
+        return None
+        
+    except Exception as e:
+        st.warning(f"Could not retrieve previous values from Snowflake: {e}")
+        return None
+
+def get_latest_successor_values_for_incumbent_snowflake(successor_employee_id, incumbent_employee_id):
+    """Get the latest successor assessment values for prepopulation from Snowflake, filtered by incumbent"""
+    if not SNOWFLAKE_AVAILABLE:
+        return None
+    
+    try:
+        conn = get_snowflake_connection()
+        cursor = conn.cursor()
+        
+        # Format query with table name
+        query = CONFIG['queries']['snowflake']['get_latest_successor_values_for_incumbent'].format(
+            succession_plans_table=CONFIG['database']['snowflake']['tables']['succession_plans']
+        )
+        
+        cursor.execute(query, [successor_employee_id, incumbent_employee_id])
+        result = cursor.fetchone()
+        conn.close()
+        
+        if result:
+            return {
+                "readiness": result[0],
+                "future_readiness_timing": result[1],
+                # "contract_end_date": result["contract_end_date": result[2],],  # Excluded to keep clear (x) button
                 "strengths": result[3],
                 "top_skills": json.loads(result[4]) if result[4] else [],
                 "top_ple": result[5],
@@ -187,15 +202,13 @@ def save_succession_plan_snowflake(incumbent_data, successor_data, plan_details,
 
 def test_snowflake_connection():
     """Test the Snowflake connection and return status"""
-    if not SNOWFLAKE_AVAILABLE:
-        return False, "Snowflake connector not installed"
-    
     try:
         conn = get_snowflake_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT 1")
-        result = cursor.fetchone()
-        conn.close()
-        return True, "Connection successful"
+        # Test with a simple query
+        df = conn.query("SELECT 1 as test")
+        if not df.empty and df.iloc[0]['test'] == 1:
+            return True, "Connection successful"
+        else:
+            return False, "Query returned unexpected result"
     except Exception as e:
         return False, f"Connection failed: {e}"

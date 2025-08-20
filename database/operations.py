@@ -9,18 +9,24 @@ import json
 from config.loader import CONFIG
 
 @st.cache_data(show_spinner="Searching database...")
-def search_incumbents(last_name):
-    """Queries the SQLite database for incumbents by last name."""
+def search_incumbents(search_term, search_type="last_name"):
+    """Queries the SQLite database for incumbents by last name or full name."""
     try:
         conn = sqlite3.connect(CONFIG['database']['sqlite']['employee_db'])
         
+        # Choose the appropriate query based on search type
+        if search_type == "full_name":
+            query_key = 'search_incumbents_full_name'
+        else:
+            query_key = 'search_incumbents'
+        
         # Format query with table name and search limit
-        query = CONFIG['queries']['sqlite']['search_incumbents'].format(
+        query = CONFIG['queries']['sqlite'][query_key].format(
             incumbents_table=CONFIG['database']['sqlite']['tables']['incumbents'],
             search_limit=CONFIG['database']['limits']['incumbent_search']
         )
         
-        df = pd.read_sql_query(query, conn, params=(f"%{last_name}%",))
+        df = pd.read_sql_query(query, conn, params=(f"%{search_term}%",))
         conn.close()
         return df.to_dict('records')
     except Exception as e:
@@ -28,18 +34,24 @@ def search_incumbents(last_name):
         return []
 
 @st.cache_data(show_spinner="Searching database...")
-def search_successors(last_name):
-    """Queries the SQLite database for successors by last name."""
+def search_successors(search_term, search_type="last_name"):
+    """Queries the SQLite database for successors by last name or full name."""
     try:
         conn = sqlite3.connect(CONFIG['database']['sqlite']['employee_db'])
         
+        # Choose the appropriate query based on search type
+        if search_type == "full_name":
+            query_key = 'search_successors_full_name'
+        else:
+            query_key = 'search_successors'
+        
         # Format query with table name and search limit
-        query = CONFIG['queries']['sqlite']['search_successors'].format(
+        query = CONFIG['queries']['sqlite'][query_key].format(
             successors_table=CONFIG['database']['sqlite']['tables']['successors'],
             search_limit=CONFIG['database']['limits']['successor_search']
         )
         
-        df = pd.read_sql_query(query, conn, params=(f"%{last_name}%",))
+        df = pd.read_sql_query(query, conn, params=(f"%{search_term}%",))
         conn.close()
         return df.to_dict('records')
     except Exception as e:
@@ -48,9 +60,9 @@ def search_successors(last_name):
 
 # Keep the old function for backward compatibility, but make it search successors
 @st.cache_data(show_spinner="Searching database...")
-def search_employees(last_name):
-    """Queries the SQLite database for employees by last name. (Legacy function - now searches successors)"""
-    return search_successors(last_name)
+def search_employees(search_term, search_type="last_name"):
+    """Queries the SQLite database for employees by last name or full name. (Legacy function - now searches successors)"""
+    return search_successors(search_term, search_type)
 
 def get_latest_incumbent_values(employee_id):
     """Get the latest incumbent plan values for prepopulation"""
@@ -141,6 +153,51 @@ def get_latest_successor_values(employee_id):
         
     except Exception as e:
         print(f"Error in get_latest_successor_values: {e}")  # Debug print
+        return None
+
+def get_latest_successor_values_for_incumbent(successor_employee_id, incumbent_employee_id):
+    """Get the latest successor assessment values for prepopulation, filtered by incumbent"""
+    try:
+        conn = sqlite3.connect(CONFIG['database']['sqlite']['succession_plans_db'])
+        cursor = conn.cursor()
+        
+        # Format query with table name
+        query = CONFIG['queries']['sqlite']['get_latest_successor_values_for_incumbent'].format(
+            succession_plans_table=CONFIG['database']['sqlite']['tables']['succession_plans']
+        )
+        
+        cursor.execute(query, (successor_employee_id, incumbent_employee_id))
+        
+        result = cursor.fetchone()
+        conn.close()
+        
+        if result:
+            # Helper function to safely parse JSON or return as list
+            def safe_json_parse(value, default=None):
+                if not value:
+                    return default or []
+                try:
+                    return json.loads(value)
+                except (json.JSONDecodeError, TypeError):
+                    # If it's not valid JSON, treat as single item or return as-is
+                    if isinstance(value, str):
+                        return [value] if default == [] else value
+                    return value
+            
+            return {
+                "readiness": result[0],
+                "future_readiness_timing": result[1],
+                "contract_end_date": result[2],
+                "strengths": result[3],
+                "top_skills": safe_json_parse(result[4], []),
+                "top_ple": result[5],
+                "development_focus": result[6],
+                "talent_actions": result[7]
+            }
+        return None
+        
+    except Exception as e:
+        print(f"Error in get_latest_successor_values_for_incumbent: {e}")  # Debug print
         return None
 
 def save_succession_plan(incumbent_data, successor_data, plan_details, assessment_details):

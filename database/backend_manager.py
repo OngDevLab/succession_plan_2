@@ -11,6 +11,7 @@ from .operations import (
     search_successors as search_successors_sqlite,
     get_latest_incumbent_values as get_latest_incumbent_values_sqlite,
     get_latest_successor_values as get_latest_successor_values_sqlite,
+    get_latest_successor_values_for_incumbent as get_latest_successor_values_for_incumbent_sqlite,
     save_succession_plan as save_succession_plan_sqlite
 )
 
@@ -19,6 +20,7 @@ from .snowflake_operations import (
     search_successors_snowflake,
     get_latest_incumbent_values_snowflake,
     get_latest_successor_values_snowflake,
+    get_latest_successor_values_for_incumbent_snowflake,
     save_succession_plan_snowflake,
     test_snowflake_connection,
     SNOWFLAKE_AVAILABLE
@@ -86,21 +88,21 @@ class BackendManager:
                     })
         return backends
     
-    def search_incumbents(self, last_name):
+    def search_incumbents(self, search_term, search_type="last_name"):
         """Search incumbents using the selected backend"""
         backend = self.get_current_backend()
         if backend == 'snowflake':
-            return search_incumbents_snowflake(last_name)
+            return search_incumbents_snowflake(search_term, search_type)
         else:
-            return search_incumbents_sqlite(last_name)
+            return search_incumbents_sqlite(search_term, search_type)
     
-    def search_successors(self, last_name):
+    def search_successors(self, search_term, search_type="last_name"):
         """Search successors using the selected backend"""
         backend = self.get_current_backend()
         if backend == 'snowflake':
-            return search_successors_snowflake(last_name)
+            return search_successors_snowflake(search_term, search_type)
         else:
-            return search_successors_sqlite(last_name)
+            return search_successors_sqlite(search_term, search_type)
     
     def get_latest_incumbent_values(self, employee_id):
         """Get latest incumbent values using the selected backend"""
@@ -120,6 +122,15 @@ class BackendManager:
             # Always use SQLite for succession plans data for now
             return get_latest_successor_values_sqlite(employee_id)
     
+    def get_latest_successor_values_for_incumbent(self, successor_employee_id, incumbent_employee_id):
+        """Get latest successor values for specific incumbent using the selected backend"""
+        backend = self.get_current_backend()
+        if backend == 'snowflake':
+            return get_latest_successor_values_for_incumbent_snowflake(successor_employee_id, incumbent_employee_id)
+        else:
+            # Always use SQLite for succession plans data for now
+            return get_latest_successor_values_for_incumbent_sqlite(successor_employee_id, incumbent_employee_id)
+    
     def save_succession_plan(self, incumbent_data, successor_data, plan_details, assessment_details):
         """Save succession plan using the selected backend"""
         # For now, always save to SQLite regardless of selected backend
@@ -130,13 +141,18 @@ class BackendManager:
 backend_manager = BackendManager()
 
 # Export convenience functions that use the backend manager
-def search_incumbents(last_name):
+def search_incumbents(search_term, search_type="last_name"):
     """Search incumbents using the selected backend"""
-    return backend_manager.search_incumbents(last_name)
+    return backend_manager.search_incumbents(search_term, search_type)
 
-def search_successors(last_name):
+# Export convenience functions that use the backend manager
+def search_incumbents(search_term, search_type="last_name"):
+    """Search incumbents using the selected backend"""
+    return backend_manager.search_incumbents(search_term, search_type)
+
+def search_successors(search_term, search_type="last_name"):
     """Search successors using the selected backend"""
-    return backend_manager.search_successors(last_name)
+    return backend_manager.search_successors(search_term, search_type)
 
 def get_latest_incumbent_values(employee_id):
     """Get latest incumbent values using the selected backend"""
@@ -145,6 +161,10 @@ def get_latest_incumbent_values(employee_id):
 def get_latest_successor_values(employee_id):
     """Get latest successor values using the selected backend"""
     return backend_manager.get_latest_successor_values(employee_id)
+
+def get_latest_successor_values_for_incumbent(successor_employee_id, incumbent_employee_id):
+    """Get latest successor values for specific incumbent using the selected backend"""
+    return backend_manager.get_latest_successor_values_for_incumbent(successor_employee_id, incumbent_employee_id)
 
 def save_succession_plan(incumbent_data, successor_data, plan_details, assessment_details):
     """Save succession plan using the selected backend"""

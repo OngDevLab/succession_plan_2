@@ -81,7 +81,8 @@ else:
     st.info("Search for the employee you want to create a succession plan for.")
     display_search_box("incumbent")
     if st.session_state.search_term:
-        results = search_incumbents(st.session_state.search_term)
+        search_type = st.session_state.get('current_search_type', 'last_name')
+        results = search_incumbents(st.session_state.search_term, search_type)
         if results:
             display_search_results(results, "incumbent")
         else:
@@ -163,7 +164,8 @@ if st.session_state.app_data['successors'] or st.session_state.app_data['incumbe
             st.info("Search for potential successors to add to the plan.")
             display_search_box("successor")
             if st.session_state.search_term:
-                results = search_successors(st.session_state.search_term)
+                search_type = st.session_state.get('current_search_type', 'last_name')
+                results = search_successors(st.session_state.search_term, search_type)
                 if results:
                     display_search_results(results, "successor")
                 else:
@@ -198,12 +200,10 @@ if st.session_state.app_data['incumbent'] and st.session_state.app_data['success
                     saved_record_ids.append(record_id)
             
             if success_count == len(successors):
-                st.success(f"✅ Successfully saved {success_count} succession plan record(s) to the database!")
-                st.info(f"🆔 Record IDs: {', '.join([rid[:8] + '...' for rid in saved_record_ids[:3]])}{'...' if len(saved_record_ids) > 3 else ''}")
-                from ui.components import show_mickey_celebration
-                show_mickey_celebration()
+                st.success(f"Successfully saved {success_count} succession plan record(s) to the database!")
+                st.info(f"Record IDs: {', '.join([rid[:8] + '...' for rid in saved_record_ids[:3]])}{'...' if len(saved_record_ids) > 3 else ''}")
             else:
-                st.error(f"❌ Only {success_count} out of {len(successors)} records were saved successfully.")
+                st.error(f"Only {success_count} out of {len(successors)} records were saved successfully.")
     
     with col2:
         # PowerPoint download with session state approach
@@ -227,7 +227,7 @@ if st.session_state.app_data['incumbent'] and st.session_state.app_data['success
                         final_buffer = auto_repair_pptx(pptx_buffer, method="temp_file")
                         st.session_state.pptx_data = final_buffer.getvalue()
                     
-                    st.success("✅ PowerPoint generated and optimized! Download button below.")
+                    st.success("PowerPoint generated and optimized! Download button below.")
                     
             except Exception as e:
                 st.error(f"Error creating PowerPoint: {e}")

@@ -12,11 +12,11 @@ from config.loader import CONFIG
 def search_incumbents(last_name):
     """Queries the SQLite database for incumbents by last name."""
     try:
-        conn = sqlite3.connect(CONFIG['database']['employee_db'])
+        conn = sqlite3.connect(CONFIG['database']['sqlite']['employee_db'])
         
         # Format query with table name and search limit
-        query = CONFIG['queries']['search_incumbents'].format(
-            incumbents_table=CONFIG['database']['tables']['incumbents'],
+        query = CONFIG['queries']['sqlite']['search_incumbents'].format(
+            incumbents_table=CONFIG['database']['sqlite']['tables']['incumbents'],
             search_limit=CONFIG['database']['limits']['incumbent_search']
         )
         
@@ -31,11 +31,11 @@ def search_incumbents(last_name):
 def search_successors(last_name):
     """Queries the SQLite database for successors by last name."""
     try:
-        conn = sqlite3.connect(CONFIG['database']['employee_db'])
+        conn = sqlite3.connect(CONFIG['database']['sqlite']['employee_db'])
         
         # Format query with table name and search limit
-        query = CONFIG['queries']['search_successors'].format(
-            successors_table=CONFIG['database']['tables']['successors'],
+        query = CONFIG['queries']['sqlite']['search_successors'].format(
+            successors_table=CONFIG['database']['sqlite']['tables']['successors'],
             search_limit=CONFIG['database']['limits']['successor_search']
         )
         
@@ -55,12 +55,12 @@ def search_employees(last_name):
 def get_latest_incumbent_values(employee_id):
     """Get the latest incumbent plan values for prepopulation"""
     try:
-        conn = sqlite3.connect(CONFIG['database']['succession_plans_db'])
+        conn = sqlite3.connect(CONFIG['database']['sqlite']['succession_plans_db'])
         cursor = conn.cursor()
         
         # Format query with table name
-        query = CONFIG['queries']['get_latest_incumbent_values'].format(
-            succession_plans_table=CONFIG['database']['tables']['succession_plans']
+        query = CONFIG['queries']['sqlite']['get_latest_incumbent_values'].format(
+            succession_plans_table=CONFIG['database']['sqlite']['tables']['succession_plans']
         )
         
         cursor.execute(query, (employee_id,))
@@ -69,13 +69,25 @@ def get_latest_incumbent_values(employee_id):
         conn.close()
         
         if result:
+            # Helper function to safely parse JSON or return as list
+            def safe_json_parse(value, default=None):
+                if not value:
+                    return default or []
+                try:
+                    return json.loads(value)
+                except (json.JSONDecodeError, TypeError):
+                    # If it's not valid JSON, treat as single item or return as-is
+                    if isinstance(value, str):
+                        return [value] if default == [] else value
+                    return value
+            
             return {
                 "critical_role": result[0],
                 "responsibilities": result[1],
-                "top_skills": json.loads(result[2]) if result[2] else [],
+                "top_skills": safe_json_parse(result[2], []),
                 "top_ple": result[3],
                 "contract_end_date": result[4],
-                "sourcing_strategy": json.loads(result[5]) if result[5] else [],
+                "sourcing_strategy": safe_json_parse(result[5], []),
                 "role_type": result[6],
                 "scenario_plan": result[7],
                 "new_position_title": result[8]
@@ -83,17 +95,18 @@ def get_latest_incumbent_values(employee_id):
         return None
         
     except Exception as e:
+        print(f"Error in get_latest_incumbent_values: {e}")  # Debug print
         return None
 
 def get_latest_successor_values(employee_id):
     """Get the latest successor assessment values for prepopulation"""
     try:
-        conn = sqlite3.connect(CONFIG['database']['succession_plans_db'])
+        conn = sqlite3.connect(CONFIG['database']['sqlite']['succession_plans_db'])
         cursor = conn.cursor()
         
         # Format query with table name
-        query = CONFIG['queries']['get_latest_successor_values'].format(
-            succession_plans_table=CONFIG['database']['tables']['succession_plans']
+        query = CONFIG['queries']['sqlite']['get_latest_successor_values'].format(
+            succession_plans_table=CONFIG['database']['sqlite']['tables']['succession_plans']
         )
         
         cursor.execute(query, (employee_id,))
@@ -102,12 +115,24 @@ def get_latest_successor_values(employee_id):
         conn.close()
         
         if result:
+            # Helper function to safely parse JSON or return as list
+            def safe_json_parse(value, default=None):
+                if not value:
+                    return default or []
+                try:
+                    return json.loads(value)
+                except (json.JSONDecodeError, TypeError):
+                    # If it's not valid JSON, treat as single item or return as-is
+                    if isinstance(value, str):
+                        return [value] if default == [] else value
+                    return value
+            
             return {
                 "readiness": result[0],
                 "future_readiness_timing": result[1],
                 "contract_end_date": result[2],
                 "strengths": result[3],
-                "top_skills": json.loads(result[4]) if result[4] else [],
+                "top_skills": safe_json_parse(result[4], []),
                 "top_ple": result[5],
                 "development_focus": result[6],
                 "talent_actions": result[7]
@@ -115,17 +140,18 @@ def get_latest_successor_values(employee_id):
         return None
         
     except Exception as e:
+        print(f"Error in get_latest_successor_values: {e}")  # Debug print
         return None
 
 def save_succession_plan(incumbent_data, successor_data, plan_details, assessment_details):
     """Save a succession plan record to the database with database-side UUID generation"""
     try:
-        conn = sqlite3.connect(CONFIG['database']['succession_plans_db'])
+        conn = sqlite3.connect(CONFIG['database']['sqlite']['succession_plans_db'])
         cursor = conn.cursor()
         
         # Format query with table name
-        query = CONFIG['queries']['save_succession_plan'].format(
-            succession_plans_table=CONFIG['database']['tables']['succession_plans']
+        query = CONFIG['queries']['sqlite']['save_succession_plan'].format(
+            succession_plans_table=CONFIG['database']['sqlite']['tables']['succession_plans']
         )
         
         cursor.execute(query, (

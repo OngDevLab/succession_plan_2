@@ -17,11 +17,13 @@ import io
 
 # Import from modules
 from config.loader import SKILLS_LIST, PLE_LIST, CONFIG
-from database.operations import search_incumbents, search_successors, search_employees, save_succession_plan
+from database.backend_manager import search_incumbents, search_successors, save_succession_plan
+from database.operations import search_employees  # Keep this for backward compatibility
 from ui.components import (
     load_css, display_sidebar_summary, display_search_box, display_search_results,
     display_selected_incumbent_card, display_incumbent_form, display_successor_form
 )
+from ui.backend_selector import display_backend_selector, display_backend_status, show_backend_configuration_help
 from utils.helpers import force_page_reload, initialize_state
 from utils.pptx_repair import auto_repair_pptx
 from pptx_gen.simple_text_generator import create_succession_plan_from_template
@@ -40,7 +42,21 @@ load_css()
 st.sidebar.image(CONFIG['ui']['logo_path'], width=CONFIG['ui']['logo_width'])
 display_sidebar_summary()
 
+# Display backend selector in sidebar
+current_backend = display_backend_selector()
+
 st.title("🏛️ Succession Planning Tool v4 - Functions")
+
+# Display current backend status
+display_backend_status()
+
+# Show configuration help if Snowflake is not properly configured
+if current_backend == 'snowflake':
+    from database.backend_manager import backend_manager
+    backends = backend_manager.get_available_backends()
+    snowflake_info = next((b for b in backends if b['name'] == 'snowflake'), None)
+    if snowflake_info and not snowflake_info['available']:
+        show_backend_configuration_help()
 st.caption("🆔 Database-side UUIDv4 | 📝 ALL CAPS columns | ✨ Clean UI | 💡 Smart Prepopulation | 🔧 Function-based Modules")
 
 # --- DIALOG MANAGEMENT ---

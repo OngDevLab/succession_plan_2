@@ -6,7 +6,7 @@ import streamlit as st
 import datetime
 import json
 from config.loader import SKILLS_LIST, PLE_LIST, FORM_OPTIONS
-from database.operations import get_latest_incumbent_values, get_latest_successor_values
+from database.backend_manager import get_latest_incumbent_values, get_latest_successor_values
 
 # Instead of @st.dialog, use regular containers that can't be accidentally closed
 def display_incumbent_form():

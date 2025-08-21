@@ -47,10 +47,6 @@ def get_snowflake_session():
 @st.cache_data(show_spinner="Searching Snowflake database...")
 def search_incumbents_snowflake(search_term, search_type="last_name"):
     """Queries Snowflake for incumbents by last name or full name."""
-    if not SNOWFLAKE_AVAILABLE:
-        st.error("Snowflake connector not available")
-        return []
-    
     try:
         conn = get_snowflake_connection()
         
@@ -60,13 +56,15 @@ def search_incumbents_snowflake(search_term, search_type="last_name"):
         else:
             query_key = 'search_incumbents'
         
-        # Format query with table name and search limit
+        # Format query with table name, search term, and search limit (like your example)
         query = CONFIG['queries']['snowflake'][query_key].format(
             incumbents_table=CONFIG['database']['snowflake']['tables']['incumbents'],
+            search_term=f"%{search_term}%",
             search_limit=CONFIG['database']['limits']['incumbent_search']
         )
         
-        # Execute query with parameterized search term
+        # Execute query using st.connection (no params needed with string formatting)
+        df = conn.query(query)
         return df.to_dict('records')
         
     except Exception as e:
@@ -244,8 +242,8 @@ def test_snowflake_connection():
     try:
         conn = get_snowflake_connection()
         # Test with a simple query (no params needed)
-        df = conn.query("SELECT 1 as test")
-        if not df.empty and df.iloc[0]['test'] == 1:
+        df = conn.query("SELECT 1")
+        if not df.empty:
             return True, "Connection successful"
         else:
             return False, "Query returned unexpected result"

@@ -23,6 +23,16 @@ def safe_json_parse(json_str, default=None):
     except (json.JSONDecodeError, TypeError):
         return default
 
+def get_snowflake_connection():
+    """Create and return a Snowflake connection using st.connection"""
+    try:
+        # Use Streamlit's built-in connection method (like your working code)
+        conn = st.connection("snowflake", type="snowflake")
+        return conn
+    except Exception as e:
+        st.error(f"Failed to connect to Snowflake: {e}")
+        raise
+
 def get_snowflake_session():
     """Get Snowflake session using Snowpark"""
     if not SNOWFLAKE_AVAILABLE:

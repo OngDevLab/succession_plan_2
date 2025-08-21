@@ -57,8 +57,6 @@ def search_incumbents_snowflake(search_term, search_type="last_name"):
         )
         
         # Execute query with parameterized search term
-        df = pd.read_sql_query(query, conn, params=[f"%{search_term}%"])
-        conn.close()
         return df.to_dict('records')
         
     except Exception as e:
@@ -66,28 +64,31 @@ def search_incumbents_snowflake(search_term, search_type="last_name"):
         return []
 
 @st.cache_data(show_spinner="Searching Snowflake database...")
-def search_incumbents_snowflake(search_term, search_type="last_name"):
-    """Queries Snowflake for incumbents by last name or full name."""
+def search_successors_snowflake(search_term, search_type="last_name"):
+    """Queries Snowflake for successors by last name or full name."""
     try:
         conn = get_snowflake_connection()
         
         # Choose the appropriate query based on search type
         if search_type == "full_name":
-            query_key = 'search_incumbents_full_name'
+            query_key = 'search_successors_full_name'
         else:
-            query_key = 'search_incumbents'
+            query_key = 'search_successors'
         
         # Format query with table name, search term, and search limit (like your example)
         query = CONFIG['queries']['snowflake'][query_key].format(
-            incumbents_table=CONFIG['database']['snowflake']['tables']['incumbents'],
+            successors_table=CONFIG['database']['snowflake']['tables']['successors'],
             search_term=f"%{search_term}%",
-            search_limit=CONFIG['database']['limits']['incumbent_search']
+            search_limit=CONFIG['database']['limits']['successor_search']
         )
         
         # Execute query using st.connection (no params needed with string formatting)
         df = conn.query(query)
         return df.to_dict('records')
         
+    except Exception as e:
+        st.error(f"Snowflake database error: {e}")
+        return []
     except Exception as e:
         st.error(f"Snowflake database error: {e}")
         return []

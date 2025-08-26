@@ -105,14 +105,17 @@ def display_search_results(results, role):
     
     for i, person in enumerate(results):
         cols = st.columns([1, 6, 2])
-        full_name = f"{person['PREFERRED_NAME_FIRST_NAME']} {person['PREFERRED_NAME_LAST_NAME']}"
+        full_name = f"{person['PREFERRED_FIRST_NAME']} {person['PREFERRED_LAST_NAME']}"
         with cols[0]:
             try:
                 st.image(get_rostr_avatar(person['EMPLOYEE_ID']))
             except:
                 pass
         with cols[1]:
-            st.markdown(f"<div style='padding-top: 5px;'><strong>{full_name}</strong><br><span style='font-size: 0.9em; color: gray;'>{person['EMAIL_PRIMARY_WORK']}</span></div>", unsafe_allow_html=True)
+            # Display name, position title, and manager name
+            position_title = person.get('POSITION_TITLE', 'N/A')
+            manager_name = person.get('LEADER_NAME', 'N/A')
+            st.markdown(f"<div style='padding-top: 5px;'><strong>{full_name}</strong><br><span style='font-size: 0.9em; color: gray;'>{position_title}</span><br><span style='font-size: 0.8em; color: #666;'>Manager: {manager_name}</span></div>", unsafe_allow_html=True)
         with cols[2]:
             st.write("")
             # Check if person is already selected

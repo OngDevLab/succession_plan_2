@@ -200,23 +200,86 @@ def get_latest_successor_values_for_incumbent(successor_employee_id, incumbent_e
         print(f"Error in get_latest_successor_values_for_incumbent: {e}")  # Debug print
         return None
 
-def save_succession_plan(incumbent_data, successor_data, plan_details, assessment_details):
-    """Save a succession plan record to the database with database-side UUID generation"""
+def get_existing_successors_for_incumbent(incumbent_employee_id):
+    """Get existing successors for an incumbent (latest non-removed entries only)"""
+    try:
+        conn = sqlite3.connect(CONFIG['database']['sqlite']['succession_plans_db'])
+        
+        # Format query with table name
+        query = CONFIG['queries']['sqlite']['get_existing_successors_for_incumbent'].format(
+            succession_plans_table=CONFIG['database']['sqlite']['tables']['succession_plans']
+        )
+        
+        df = pd.read_sql_query(query, conn, params=(incumbent_employee_id, incumbent_employee_id))
+        conn.close()
+        
+        successors = []
+        for _, row in df.iterrows():
+            # Helper function to safely parse JSON or return as list
+            def safe_json_parse(value, default=None):
+                if not value:
+                    return default or []
+                try:
+                    return json.loads(value)
+                except (json.JSONDecodeError, TypeError):
+                    # If it's not valid JSON, treat as single item or return as-is
+                    if isinstance(value, str):
+                        return [value] if default == [] else value
+                    return value
+            
+            # Create metadata structure matching the employee search results
+            metadata = {
+                'EMPLOYEE_ID': row['SUCCESSOR_EMPLOYEE_ID'],
+                'PREFERRED_FIRST_NAME': row['SUCCESSOR_FIRST_NAME'],
+                'PREFERRED_LAST_NAME': row['SUCCESSOR_LAST_NAME'],
+                'POSITION_TITLE': row['SUCCESSOR_POSITION'],
+                'MANAGEMENT_LEVEL': row['SUCCESSOR_MANAGEMENT_LEVEL'],
+                'JOB_LEVEL': row['SUCCESSOR_JOB_LEVEL'],
+                'SEGMENT_HIER_LEVEL_2_NAME': row['SUCCESSOR_SEGMENT'],
+                'LEADER_NAME': None,  # Not stored in succession plans
+                'HR_SEGMENT': None    # Not stored in succession plans
+            }
+            
+            # Create assessment structure
+            assessment = {
+                'readiness': row['SUCCESSOR_READINESS'],
+                'future_readiness_timing': row['SUCCESSOR_FUTURE_READINESS_TIMING'],
+                'contract_end_date': row['SUCCESSOR_CONTRACT_END_DATE'],
+                'strengths': row['SUCCESSOR_STRENGTHS'],
+                'top_skills': safe_json_parse(row['SUCCESSOR_TOP_SKILLS'], []),
+                'top_ple': row['SUCCESSOR_TOP_PLE'],
+                'development_focus': row['SUCCESSOR_DEVELOPMENT_FOCUS'],
+                'talent_actions': row['SUCCESSOR_TALENT_ACTIONS']
+            }
+            
+            successors.append({
+                'metadata': metadata,
+                'assessment': assessment
+            })
+        
+        return successors
+        
+    except Exception as e:
+        print(f"Error in get_existing_successors_for_incumbent: {e}")
+        return []
+
+def mark_successor_as_removed(incumbent_data, successor_data, plan_details, assessment_details):
+    """Mark a successor as removed by creating a new record with REMOVED=TRUE"""
     try:
         conn = sqlite3.connect(CONFIG['database']['sqlite']['succession_plans_db'])
         cursor = conn.cursor()
         
         # Format query with table name
-        query = CONFIG['queries']['sqlite']['save_succession_plan'].format(
+        query = CONFIG['queries']['sqlite']['mark_successor_as_removed'].format(
             succession_plans_table=CONFIG['database']['sqlite']['tables']['succession_plans']
         )
         
         cursor.execute(query, (
             incumbent_data['EMPLOYEE_ID'],
-            incumbent_data['PREFERRED_NAME_FIRST_NAME'],
-            incumbent_data['PREFERRED_NAME_LAST_NAME'],
-            incumbent_data['EMAIL_PRIMARY_WORK'],
-            incumbent_data['POSITION_NBR_DESCRIPTION'],
+            incumbent_data['PREFERRED_FIRST_NAME'],
+            incumbent_data['PREFERRED_LAST_NAME'],
+            incumbent_data.get('EMAIL_PRIMARY_WORK', ''),
+            incumbent_data.get('POSITION_TITLE', ''),
             incumbent_data['MANAGEMENT_LEVEL'],
             incumbent_data['JOB_LEVEL'],
             incumbent_data['SEGMENT_HIER_LEVEL_2_NAME'],
@@ -230,10 +293,10 @@ def save_succession_plan(incumbent_data, successor_data, plan_details, assessmen
             plan_details['scenario_plan'],
             plan_details.get('new_position_title'),
             successor_data['EMPLOYEE_ID'],
-            successor_data['PREFERRED_NAME_FIRST_NAME'],
-            successor_data['PREFERRED_NAME_LAST_NAME'],
-            successor_data['EMAIL_PRIMARY_WORK'],
-            successor_data['POSITION_NBR_DESCRIPTION'],
+            successor_data['PREFERRED_FIRST_NAME'],
+            successor_data['PREFERRED_LAST_NAME'],
+            successor_data.get('EMAIL_PRIMARY_WORK', ''),
+            successor_data.get('POSITION_TITLE', ''),
             successor_data['MANAGEMENT_LEVEL'],
             successor_data['JOB_LEVEL'],
             successor_data['SEGMENT_HIER_LEVEL_2_NAME'],
@@ -245,6 +308,65 @@ def save_succession_plan(incumbent_data, successor_data, plan_details, assessmen
             assessment_details['top_ple'],
             assessment_details['development_focus'],
             assessment_details['talent_actions']
+        ))
+        
+        # Get the generated RECORD_ID
+        record_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        return str(record_id)
+        
+    except Exception as e:
+        st.error(f"Database error: {e}")
+        return None
+
+def save_succession_plan(incumbent_data, successor_data, plan_details, assessment_details):
+    """Save a succession plan record to the database with database-side UUID generation"""
+    try:
+        conn = sqlite3.connect(CONFIG['database']['sqlite']['succession_plans_db'])
+        cursor = conn.cursor()
+        
+        # Format query with table name
+        query = CONFIG['queries']['sqlite']['save_succession_plan'].format(
+            succession_plans_table=CONFIG['database']['sqlite']['tables']['succession_plans']
+        )
+        
+        cursor.execute(query, (
+            incumbent_data['EMPLOYEE_ID'],
+            incumbent_data['PREFERRED_FIRST_NAME'],
+            incumbent_data['PREFERRED_LAST_NAME'],
+            incumbent_data.get('EMAIL_PRIMARY_WORK', ''),  # Default to empty string if not available
+            incumbent_data.get('POSITION_TITLE', ''),  # Use POSITION_TITLE instead of POSITION_NBR_DESCRIPTION
+            incumbent_data['MANAGEMENT_LEVEL'],
+            incumbent_data['JOB_LEVEL'],
+            incumbent_data['SEGMENT_HIER_LEVEL_2_NAME'],
+            plan_details['critical_role'],
+            plan_details['responsibilities'],
+            json.dumps(plan_details['top_skills']),
+            plan_details['top_ple'],
+            plan_details.get('contract_end_date'),
+            json.dumps(plan_details['sourcing_strategy']),
+            plan_details.get('role_type'),
+            plan_details['scenario_plan'],
+            plan_details.get('new_position_title'),
+            successor_data['EMPLOYEE_ID'],
+            successor_data['PREFERRED_FIRST_NAME'],
+            successor_data['PREFERRED_LAST_NAME'],
+            successor_data.get('EMAIL_PRIMARY_WORK', ''),  # Default to empty string if not available
+            successor_data.get('POSITION_TITLE', ''),  # Use POSITION_TITLE instead of POSITION_NBR_DESCRIPTION
+            successor_data['MANAGEMENT_LEVEL'],
+            successor_data['JOB_LEVEL'],
+            successor_data['SEGMENT_HIER_LEVEL_2_NAME'],
+            assessment_details['readiness'],
+            assessment_details.get('future_readiness_timing'),
+            assessment_details.get('contract_end_date'),
+            assessment_details['strengths'],
+            json.dumps(assessment_details['top_skills']),
+            assessment_details['top_ple'],
+            assessment_details['development_focus'],
+            assessment_details['talent_actions'],
+            False  # REMOVED = FALSE for new records
         ))
         
         # Get the generated RECORD_ID

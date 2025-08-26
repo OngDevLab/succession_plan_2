@@ -107,7 +107,7 @@ if st.session_state.app_data['successors'] or st.session_state.app_data['incumbe
                 for i, succ in enumerate(row_successors):
                     col = cols[i]  # Use the appropriate column
                     actual_index = row_start + i
-                    name = f"{succ['metadata']['PREFERRED_NAME_FIRST_NAME']} {succ['metadata']['PREFERRED_NAME_LAST_NAME']}"
+                    name = f"{succ['metadata']['PREFERRED_FIRST_NAME']} {succ['metadata']['PREFERRED_LAST_NAME']}"
                     readiness = succ['assessment']['readiness']
                     assessment = succ['assessment']
                     
@@ -155,8 +155,20 @@ if st.session_state.app_data['successors'] or st.session_state.app_data['incumbe
                                     st.session_state.editing_successor_index = actual_index
                                     st.rerun()
                             with c2:
-                                if st.button("Change Successor", key=f"remove_succ_{actual_index}", help="Select a different successor", use_container_width=True):
+                                if st.button("Remove", key=f"remove_succ_{actual_index}", help="Remove this successor from the plan", use_container_width=True):
+                                    # Mark successor as removed in database if incumbent and plan details exist
+                                    if st.session_state.app_data['incumbent'] and st.session_state.app_data['incumbent'].get('plan_details'):
+                                        from database.operations import mark_successor_as_removed
+                                        mark_successor_as_removed(
+                                            st.session_state.app_data['incumbent']['metadata'],
+                                            succ['metadata'],
+                                            st.session_state.app_data['incumbent']['plan_details'],
+                                            succ['assessment']
+                                        )
+                                    
+                                    # Remove from session state
                                     st.session_state.app_data['successors'].pop(actual_index)
+                                    st.success(f"{name} has been removed from the succession plan.")
                                     st.rerun()
         
         # Search for new successors - only show if incumbent exists and not editing incumbent
@@ -234,7 +246,7 @@ if st.session_state.app_data['incumbent'] and st.session_state.app_data['success
         
         # Download button (only shows if data exists)
         if st.session_state.pptx_data:
-            incumbent_name = st.session_state.app_data['incumbent']['metadata']['PREFERRED_NAME_LAST_NAME']
+            incumbent_name = st.session_state.app_data['incumbent']['metadata']['PREFERRED_LAST_NAME']
             st.download_button(
                 label="📥 Download PowerPoint",
                 data=st.session_state.pptx_data,

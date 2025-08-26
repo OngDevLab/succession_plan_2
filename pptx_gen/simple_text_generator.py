@@ -105,7 +105,7 @@ def copy_slide_elements(source_slide, target_slide):
 def fill_template_simple_text(slide, incumbent_data, successors_data):
     """Fill template by replacing carrot placeholders only, FORCE LEFT ALIGNMENT"""
     
-    incumbent_name = f"{incumbent_data['metadata']['PREFERRED_NAME_FIRST_NAME']} {incumbent_data['metadata']['PREFERRED_NAME_LAST_NAME']}"
+    incumbent_name = f"{incumbent_data['metadata']['PREFERRED_FIRST_NAME']} {incumbent_data['metadata']['PREFERRED_LAST_NAME']}"
     plan = incumbent_data['plan_details']
     
     shapes = list(slide.shapes)
@@ -120,7 +120,7 @@ def fill_template_simple_text(slide, incumbent_data, successors_data):
                 for run in paragraph.runs:
                     # Only replace specific placeholders
                     if "POSITION" == run.text.strip():
-                        run.text = incumbent_data['metadata'].get('POSITION_NBR_DESCRIPTION', 'POSITION')
+                        run.text = incumbent_data['metadata'].get('POSITION_TITLE', 'POSITION')
                     elif "NAME" == run.text.strip():
                         run.text = incumbent_name
                     elif "Insert role information summary" in run.text:
@@ -151,14 +151,14 @@ def get_incumbent_summary_like_app_final(incumbent_data, plan):
     """Get incumbent summary exactly like app_final.py display"""
     
     person = incumbent_data['metadata']
-    full_name = f"{person['PREFERRED_NAME_FIRST_NAME']} {person['PREFERRED_NAME_LAST_NAME']}"
+    full_name = f"{person['PREFERRED_FIRST_NAME']} {person['PREFERRED_LAST_NAME']}"
     
     # Build summary like app_final.py lines 552-565
     summary_parts = []
     
     # Name and position
     summary_parts.append(f"INCUMBENT: {full_name}")
-    summary_parts.append(f"Position: {person['POSITION_NBR_DESCRIPTION']}")
+    summary_parts.append(f"Position: {person['POSITION_TITLE']}")
     
     # Critical role
     critical_text = "Yes" if plan.get('critical_role') else "No"
@@ -219,8 +219,8 @@ def fill_table_carrot_placeholders_only(table, successors_data):
         if col_idx >= len(table.columns):
             break
             
-        succ_name = f"{successor['metadata']['PREFERRED_NAME_FIRST_NAME']} {successor['metadata']['PREFERRED_NAME_LAST_NAME']}"
-        succ_title = successor['metadata'].get('POSITION_NBR_DESCRIPTION', '')
+        succ_name = f"{successor['metadata']['PREFERRED_FIRST_NAME']} {successor['metadata']['PREFERRED_LAST_NAME']}"
+        succ_title = successor['metadata'].get('POSITION_TITLE', '')  # Updated to use POSITION_TITLE
         assessment = successor['assessment']
         
         # Row 0: Replace template placeholders with name/title/readiness

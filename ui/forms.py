@@ -16,11 +16,11 @@ def display_incumbent_form():
     if is_editing:
         person = st.session_state.app_data['incumbent']['metadata']
         plan_details = st.session_state.app_data['incumbent']['plan_details']
-        st.subheader(f"✏️ Edit: {person['PREFERRED_NAME_FIRST_NAME']} {person['PREFERRED_NAME_LAST_NAME']}")
+        st.subheader(f"✏️ Edit: {person['PREFERRED_FIRST_NAME']} {person['PREFERRED_LAST_NAME']}")
     else: 
         person = st.session_state.selected_person
         plan_details = {}
-        st.subheader(f"📝 New Plan: {person['PREFERRED_NAME_FIRST_NAME']} {person['PREFERRED_NAME_LAST_NAME']}")
+        st.subheader(f"📝 New Plan: {person['PREFERRED_FIRST_NAME']} {person['PREFERRED_LAST_NAME']}")
         
         # Try to get previous values for this person
         previous_values = get_latest_incumbent_values(person['EMPLOYEE_ID'])
@@ -109,6 +109,14 @@ def display_incumbent_form():
                 }
                 st.session_state.app_data['incumbent'] = {"metadata": person, "plan_details": updated_plan}
 
+                # Auto-populate existing successors if this incumbent already has succession plans
+                if not is_editing:  # Only auto-populate for new incumbents, not when editing
+                    from database.operations import get_existing_successors_for_incumbent
+                    existing_successors = get_existing_successors_for_incumbent(person['EMPLOYEE_ID'])
+                    if existing_successors:
+                        st.session_state.app_data['successors'] = existing_successors
+                        st.info(f"Found {len(existing_successors)} existing successor(s) for this incumbent. They have been automatically loaded.")
+
                 st.session_state.selected_person = None
                 st.session_state.editing_incumbent = False
                 st.success("Incumbent plan saved!")
@@ -126,18 +134,18 @@ def display_successor_form():
     if is_editing:
         person = st.session_state.app_data['successors'][st.session_state.editing_successor_index]['metadata']
         assessment = st.session_state.app_data['successors'][st.session_state.editing_successor_index]['assessment']
-        st.subheader(f"✏️ Edit: {person['PREFERRED_NAME_FIRST_NAME']} {person['PREFERRED_NAME_LAST_NAME']}")
+        st.subheader(f"✏️ Edit: {person['PREFERRED_FIRST_NAME']} {person['PREFERRED_LAST_NAME']}")
     else:
         person = st.session_state.selected_person
         assessment = {} 
-        st.subheader(f"Add: {person['PREFERRED_NAME_FIRST_NAME']} {person['PREFERRED_NAME_LAST_NAME']}")
+        st.subheader(f"Add: {person['PREFERRED_FIRST_NAME']} {person['PREFERRED_LAST_NAME']}")
         
         # Try to get previous values for this person, but only for the same incumbent
         if st.session_state.app_data['incumbent']:
             incumbent_employee_id = st.session_state.app_data['incumbent']['metadata']['EMPLOYEE_ID']
             previous_values = get_latest_successor_values_for_incumbent(person['EMPLOYEE_ID'], incumbent_employee_id)
             if previous_values:
-                st.info(f"Found previous assessment for {person['PREFERRED_NAME_FIRST_NAME']} as successor to this same incumbent. Fields pre-filled with latest values.")
+                st.info(f"Found previous assessment for {person['PREFERRED_FIRST_NAME']} as successor to this same incumbent. Fields pre-filled with latest values.")
                 assessment = previous_values
 
     # Form with working date input (wrapped in st.form)
@@ -210,10 +218,10 @@ def display_successor_form():
                 
                 if is_editing:
                     st.session_state.app_data['successors'][st.session_state.editing_successor_index]['assessment'] = successor_data
-                    st.success(f"{person['PREFERRED_NAME_FIRST_NAME']}'s details have been updated.")
+                    st.success(f"{person['PREFERRED_FIRST_NAME']}'s details have been updated.")
                 else:
                     st.session_state.app_data['successors'].append({"metadata": person, "assessment": successor_data})
-                    st.success(f"{person['PREFERRED_NAME_FIRST_NAME']} has been added as a successor.")
+                    st.success(f"{person['PREFERRED_FIRST_NAME']} has been added as a successor.")
 
                 st.session_state.selected_person = None
                 st.session_state.editing_successor_index = None

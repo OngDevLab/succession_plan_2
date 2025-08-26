@@ -137,14 +137,14 @@ def show_backend_configuration_help():
         ### Required Columns
         Your Snowflake tables should have these columns:
         - `SEGMENT_HIER_LEVEL_2_NAME`
-        - `PREFERRED_NAME_FIRST_NAME`
-        - `PREFERRED_NAME_LAST_NAME`
+        - `PREFERRED_FIRST_NAME`
+        - `PREFERRED_LAST_NAME`
         - `EMPLOYEE_ID`
         - `POSITION_REFERENCE_ID`
-        - `POSITION_NBR_DESCRIPTION`
+        - `POSITION_TITLE`
         - `MANAGEMENT_LEVEL`
         - `JOB_LEVEL`
-        - `DAYS_IN_MGMT_LEVEL`
-        - `MGMT_LEVEL_GROUP`
-        - `EMAIL_PRIMARY_WORK`
+        - `DAYS_IN_MANAGEMENT_LEVEL`
+        - `LEADER_NAME`
+        - `HR_SEGMENT`
         """)

@@ -7,7 +7,7 @@ from utils.rostr_avatar import get_rostr_avatar
 def display_selected_incumbent_card(incumbent, show_button=True):
     person = incumbent['metadata']
     plan = incumbent['plan_details']
-    full_name = f"{person['PREFERRED_NAME_FIRST_NAME']} {person['PREFERRED_NAME_LAST_NAME']}"
+    full_name = f"{person['PREFERRED_FIRST_NAME']} {person['PREFERRED_LAST_NAME']}"
 
     if show_button:
         st.subheader("Selected Incumbent")
@@ -21,7 +21,7 @@ def display_selected_incumbent_card(incumbent, show_button=True):
                 pass
         with c2:
             st.markdown(f"### {full_name}")
-            st.markdown(f"**Position:** {person['POSITION_NBR_DESCRIPTION']}")
+            st.markdown(f"**Position:** {person['POSITION_TITLE']}")
             critical_text = "Yes" if plan.get('critical_role') else "No"
             st.markdown(f"**Critical Role?** `{critical_text}` | **Sourcing Strategy:** `{plan.get('sourcing_strategy', 'N/A')}`")
             st.markdown(f"**Scenario:** `{plan.get('scenario_plan', 'N/A')}`")

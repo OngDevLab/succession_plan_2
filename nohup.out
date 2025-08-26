@@ -1,0 +1,105 @@
+
+Collecting usage statistics. To deactivate, set browser.gatherUsageStats to false.
+
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+/home/local/SWNA/ongw009/ongw009/.venv/lib/python3.13/site-packages/snowflake/connector/options.py:104: UserWarning: You have an incompatible version of 'pyarrow' installed (21.0.0), please install a version that adheres to: 'pyarrow<19.0.0; extra == "pandas"'
+  warn_incompatible_dep(
+/home/local/SWNA/ongw009/ongw009/.venv/lib/python3.13/site-packages/snowflake/snowpark/session.py:38: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+2025-08-21 04:29:14.660 Uncaught app execution
+Traceback (most recent call last):
+  File "/home/local/SWNA/ongw009/ongw009/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/home/local/SWNA/ongw009/ongw009/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/local/SWNA/ongw009/succession_plan_2/main_login.py", line 301, in <module>
+    @st.dialog
+     ^^^^^^^^^
+  File "/home/local/SWNA/ongw009/ongw009/.venv/lib/python3.13/site-packages/streamlit/runtime/metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "/home/local/SWNA/ongw009/ongw009/.venv/lib/python3.13/site-packages/streamlit/elements/dialog_decorator.py", line 295, in dialog_decorator
+    return _dialog_decorator(
+        func, "", width=width, dismissible=dismissible, on_dismiss=on_dismiss
+    )
+  File "/home/local/SWNA/ongw009/ongw009/.venv/lib/python3.13/site-packages/streamlit/elements/dialog_decorator.py", line 75, in _dialog_decorator
+    raise StreamlitAPIException(
+    ...<2 lines>...
+    )
+streamlit.errors.StreamlitAPIException: A non-empty `title` argument has to be provided for dialogs, for example `@st.dialog("Example Title")`.
+2025-08-21 04:30:29.580 Uncaught app execution
+Traceback (most recent call last):
+  File "/home/local/SWNA/ongw009/ongw009/.venv/lib/python3.13/site-packages/streamlit/user_info.py", line 499, in __getattr__
+    return _get_user_info()[key]
+           ~~~~~~~~~~~~~~~~^^^^^
+KeyError: 'is_logged_in'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/local/SWNA/ongw009/ongw009/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/home/local/SWNA/ongw009/ongw009/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/local/SWNA/ongw009/succession_plan_2/main_login.py", line 315, in <module>
+    if not st.user.is_logged_in:
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/local/SWNA/ongw009/ongw009/.venv/lib/python3.13/site-packages/streamlit/user_info.py", line 501, in __getattr__
+    raise AttributeError(f'st.user has no attribute "{key}".')
+AttributeError: st.user has no attribute "is_logged_in".
+2025-08-21 04:34:36.855 Connect to Snowflake using the Streamlit secret defined under [connections.snowflake].
+  Stopping...
+
+Collecting usage statistics. To deactivate, set browser.gatherUsageStats to false.
+
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+/home/local/SWNA/ongw009/ongw009/.venv/lib/python3.13/site-packages/snowflake/connector/options.py:104: UserWarning: You have an incompatible version of 'pyarrow' installed (21.0.0), please install a version that adheres to: 'pyarrow<19.0.0; extra == "pandas"'
+  warn_incompatible_dep(
+/home/local/SWNA/ongw009/ongw009/.venv/lib/python3.13/site-packages/snowflake/snowpark/session.py:38: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+2025-08-21 04:39:04.716 Connect to Snowflake using the Streamlit secret defined under [connections.snowflake].
+2025-08-21 14:48:11.320 Connect to Snowflake using the Streamlit secret defined under [connections.snowflake].
+Creating 1 slides for 2 successors
+Processing slide 1 with 2 successors
+Could not create circular photo for employee 20105380: HTTP Error 404: Not Found
+🔧 Auto-repairing PowerPoint file using standard method...
+🔧 Starting PowerPoint repair process...
+✅ Successfully loaded presentation with 1 slides
+✅ PowerPoint repair completed successfully
+🔧 Starting advanced PowerPoint repair with temp files...
+✅ Loaded presentation with 1 slides
+✅ Advanced PowerPoint repair completed successfully
+Creating 1 slides for 3 successors
+Processing slide 1 with 3 successors
+Could not create circular photo for employee 20105380: HTTP Error 404: Not Found
+🔧 Auto-repairing PowerPoint file using standard method...
+🔧 Starting PowerPoint repair process...
+✅ Successfully loaded presentation with 1 slides
+✅ PowerPoint repair completed successfully
+🔧 Starting advanced PowerPoint repair with temp files...
+✅ Loaded presentation with 1 slides
+✅ Advanced PowerPoint repair completed successfully
+  Stopping...
+
+Collecting usage statistics. To deactivate, set browser.gatherUsageStats to false.
+
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+/home/local/SWNA/ongw009/ongw009/.venv/lib/python3.13/site-packages/snowflake/connector/options.py:104: UserWarning: You have an incompatible version of 'pyarrow' installed (21.0.0), please install a version that adheres to: 'pyarrow<19.0.0; extra == "pandas"'
+  warn_incompatible_dep(
+/home/local/SWNA/ongw009/ongw009/.venv/lib/python3.13/site-packages/snowflake/snowpark/session.py:38: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+2025-08-21 15:34:59.902 Connect to Snowflake using the Streamlit secret defined under [connections.snowflake].
+2025-08-25 20:08:00.892 Connect to Snowflake using the Streamlit secret defined under [connections.snowflake].

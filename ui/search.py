@@ -83,10 +83,10 @@ def display_search_box(role):
             st.rerun()
     
     # Display current search mode info
-    if current_type == "full_name":
-        st.info("**Full Name Search**: Enter first and last name together (e.g., 'John Smith', 'Smith John', or just 'John')")
-    else:
-        st.info("**Last Name Search**: Enter last name only (e.g., 'Smith', 'Johnson')")
+    #if current_type == "full_name":
+    #    st.info("**Full Name Search**: Enter first and last name together (e.g., 'John Smith', 'Smith John', or just 'John')")
+    #else:
+    #    st.info("**Last Name Search**: Enter last name only (e.g., 'Smith', 'Johnson')")
 
 def display_search_results(results, role):
     """Display search results with current search type information"""

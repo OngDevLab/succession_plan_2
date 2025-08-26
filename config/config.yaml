@@ -2,7 +2,7 @@
 
 # Backend Configuration
 backend:
-  default: "sqlite"  # Options: "sqlite", "snowflake"
+  default: "snowflake"  # Options: "sqlite", "snowflake"
   available_backends:
     - "sqlite"
     - "snowflake"
@@ -87,8 +87,8 @@ database:
     
     # Table names (adjust these to match your Snowflake tables)
     tables:
-      incumbents: "INCUMBENTS"  # Your Snowflake incumbent table name
-      successors: "SUCCESSORS"  # Your Snowflake successor table name
+      incumbents: "HR_EXPLORATORY.HR_DE_SANDBOX.SL_VW_SP_TEST"  # Your Snowflake incumbent table name
+      successors: "HR_EXPLORATORY.HR_DE_SANDBOX.SL_VW_SP_TEST"  # Your Snowflake successor table name
       succession_plans: "SUCCESSION_PLANS"  # For future use
   
   # Search limits (applies to both backends)

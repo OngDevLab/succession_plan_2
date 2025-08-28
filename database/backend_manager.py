@@ -110,7 +110,6 @@ class BackendManager:
         if backend == 'snowflake':
             return get_latest_incumbent_values_snowflake(employee_id)
         else:
-            # Always use SQLite for succession plans data for now
             return get_latest_incumbent_values_sqlite(employee_id)
     
     def get_latest_successor_values(self, employee_id):

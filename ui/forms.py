@@ -6,7 +6,7 @@ import streamlit as st
 import datetime
 import json
 from config.loader import SKILLS_LIST, PLE_LIST, CONFIG
-from database.operations import get_latest_incumbent_values, get_latest_successor_values_for_incumbent
+from database.backend_manager import get_latest_incumbent_values, get_latest_successor_values_for_incumbent
 
 # Instead of expandable containers, use @st.dialog for better UX
 @st.dialog("Incumbent Plan Details", width="large", dismissible=False)

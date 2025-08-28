@@ -243,10 +243,10 @@ def save_succession_plan_snowflake(incumbent_data, successor_data, plan_details,
         created_tier = str(user_access.get('tier', 0))
         
         # Prepare data
-        incumbent_id = incumbent_data['metadata']['EMPLOYEE_ID']
-        incumbent_position_id = incumbent_data['metadata'].get('POSITION_ID', '')
-        successor_id = successor_data['metadata']['EMPLOYEE_ID']
-        successor_position_id = successor_data['metadata'].get('POSITION_ID', '')
+        incumbent_id = incumbent_data['EMPLOYEE_ID']
+        incumbent_position_id = incumbent_data.get('POSITION_ID', '')
+        successor_id = successor_data['EMPLOYEE_ID']
+        successor_position_id = successor_data.get('POSITION_ID', '')
         
         # Convert lists to JSON strings
         incumbent_top_skills = json.dumps(plan_details.get('top_skills', []))
@@ -256,23 +256,23 @@ def save_succession_plan_snowflake(incumbent_data, successor_data, plan_details,
         # Insert query
         insert_sql = f"""
             INSERT INTO "HR_STREAMLIT"."SUCCESSION_PLAN"."TBL_SL_SUCCESSION_PLAN_DETAIL" (
-                "SUCCESSION_PLAN_STATUS", "INCUMBENT_EMPLOYEE_ID", "INCUMBENT_POSITION_ID",
-                "CRITICAL_ROLE_IND", "INCUMBENT_ROLE_RESPONSIBILITIES", "INCUMBENT_TOP_SKILLS",
-                "INCUMBENT_TOP_PLE", "INCUMBENT_CONTRACT_END_DATE", "INCUMBENT_SOURCING_STRATEGY",
-                "INCUMBENT_ROLE_TYPE", "INCUMBENT_ROLE_SCENARIO_PLAN", "INCUMBENT_ADDITIONAL_POSITION_TITLE",
-                "SUCCESSOR_EMPLOYEE_ID", "SUCCESSOR_POSITION_ID", "SUCCESSOR_READINESS",
+                "RECORD_ID", "CREATED_AT", "INCUMBENT_EMPLOYEE_ID", "INCUMBENT_FIRST_NAME", "INCUMBENT_LAST_NAME",
+                "INCUMBENT_EMAIL", "INCUMBENT_POSITION", "INCUMBENT_MANAGEMENT_LEVEL", "INCUMBENT_JOB_LEVEL", "INCUMBENT_SEGMENT",
+                "CRITICAL_ROLE", "RESPONSIBILITIES", "INCUMBENT_TOP_SKILLS", "INCUMBENT_TOP_PLE",
+                "INCUMBENT_CONTRACT_END_DATE", "SOURCING_STRATEGY", "ROLE_TYPE", "SCENARIO_PLAN", "NEW_POSITION_TITLE",
+                "SUCCESSOR_EMPLOYEE_ID", "SUCCESSOR_FIRST_NAME", "SUCCESSOR_LAST_NAME", "SUCCESSOR_EMAIL", "SUCCESSOR_POSITION",
+                "SUCCESSOR_MANAGEMENT_LEVEL", "SUCCESSOR_JOB_LEVEL", "SUCCESSOR_SEGMENT", "SUCCESSOR_READINESS",
                 "SUCCESSOR_FUTURE_READINESS_TIMING", "SUCCESSOR_CONTRACT_END_DATE", "SUCCESSOR_STRENGTHS",
-                "SUCCESSOR_TOP_SKILLS", "SUCCESSOR_TOP_PLE", "SUCCESSOR_DEVELOPMENT_FOCUS",
-                "SUCCESSOR_TALENT_ACTIONS", "ROW_CREATED_BY", "ROW_CREATED_ON", "ROW_CREATED_TIER"
+                "SUCCESSOR_TOP_SKILLS", "SUCCESSOR_TOP_PLE", "SUCCESSOR_DEVELOPMENT_FOCUS", "SUCCESSOR_TALENT_ACTIONS", "REMOVED"
             ) VALUES (
-                'saved', '{incumbent_id}', '{incumbent_position_id}',
-                {str(plan_details.get('critical_role', False)).upper()}, '{plan_details.get('responsibilities', '')}', '{incumbent_top_skills}',
-                '{plan_details.get('top_ple', '')}', '{plan_details.get('contract_end_date', '')}', '{incumbent_sourcing_strategy}',
-                '{plan_details.get('role_type', '')}', '{plan_details.get('scenario_plan', '')}', '{plan_details.get('new_position_title', '')}',
-                '{successor_id}', '{successor_position_id}', '{assessment_details.get('readiness', '')}',
+                UUID_STRING(), CURRENT_TIMESTAMP(), '{incumbent_id}', '{incumbent_data.get('PREFERRED_FIRST_NAME', '')}', '{incumbent_data.get('PREFERRED_LAST_NAME', '')}',
+                '{incumbent_data.get('EMAIL_PRIMARY_WORK', '')}', '{incumbent_data.get('POSITION_TITLE', '')}', '{incumbent_data.get('MANAGEMENT_LEVEL', '')}', '{incumbent_data.get('JOB_LEVEL', '')}', '{incumbent_data.get('SEGMENT_HIER_LEVEL_2_NAME', '')}',
+                {str(plan_details.get('critical_role', False)).upper()}, '{plan_details.get('responsibilities', '')}', '{incumbent_top_skills}', '{plan_details.get('top_ple', '')}',
+                '{plan_details.get('contract_end_date', '')}', '{incumbent_sourcing_strategy}', '{plan_details.get('role_type', '')}', '{plan_details.get('scenario_plan', '')}', '{plan_details.get('new_position_title', '')}',
+                '{successor_id}', '{successor_data.get('PREFERRED_FIRST_NAME', '')}', '{successor_data.get('PREFERRED_LAST_NAME', '')}', '{successor_data.get('EMAIL_PRIMARY_WORK', '')}', '{successor_data.get('POSITION_TITLE', '')}',
+                '{successor_data.get('MANAGEMENT_LEVEL', '')}', '{successor_data.get('JOB_LEVEL', '')}', '{successor_data.get('SEGMENT_HIER_LEVEL_2_NAME', '')}', '{assessment_details.get('readiness', '')}',
                 '{assessment_details.get('future_readiness_timing', '')}', '{assessment_details.get('contract_end_date', '')}', '{assessment_details.get('strengths', '')}',
-                '{successor_top_skills}', '{assessment_details.get('top_ple', '')}', '{assessment_details.get('development_focus', '')}',
-                '{assessment_details.get('talent_actions', '')}', '{created_by}', CURRENT_TIMESTAMP(), '{created_tier}'
+                '{successor_top_skills}', '{assessment_details.get('top_ple', '')}', '{assessment_details.get('development_focus', '')}', '{assessment_details.get('talent_actions', '')}', FALSE
             )
         """
         

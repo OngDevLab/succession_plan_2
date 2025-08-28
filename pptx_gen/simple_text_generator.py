@@ -24,7 +24,6 @@ def create_succession_plan_from_template(incumbent_data, successors_data):
     for i in range(0, len(successors_data), successors_per_slide):
         successor_groups.append(successors_data[i:i + successors_per_slide])
     
-    print(f"Creating {len(successor_groups)} slides for {len(successors_data)} successors")
     
     # For additional slides, we need to duplicate the template slide completely
     original_slide = prs.slides[0]

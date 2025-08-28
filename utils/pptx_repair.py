@@ -13,14 +13,12 @@ def repair_pptx_buffer(pptx_buffer):
     This mimics what PowerPoint's repair function does
     """
     try:
-        print("🔧 Starting PowerPoint repair process...")
         
         # Reset buffer position
         pptx_buffer.seek(0)
         
         # Load the potentially corrupted presentation
         prs = Presentation(pptx_buffer)
-        print(f"✅ Successfully loaded presentation with {len(prs.slides)} slides")
         
         # Create a new clean buffer
         repaired_buffer = io.BytesIO()
@@ -29,11 +27,9 @@ def repair_pptx_buffer(pptx_buffer):
         prs.save(repaired_buffer)
         repaired_buffer.seek(0)
         
-        print("✅ PowerPoint repair completed successfully")
         return repaired_buffer
         
     except Exception as e:
-        print(f"❌ PowerPoint repair failed: {e}")
         # Return original buffer if repair fails
         pptx_buffer.seek(0)
         return pptx_buffer
@@ -44,7 +40,6 @@ def repair_pptx_with_temp_file(pptx_buffer):
     Sometimes more effective for severely corrupted files
     """
     try:
-        print("🔧 Starting advanced PowerPoint repair with temp files...")
         
         # Reset buffer position
         pptx_buffer.seek(0)
@@ -83,7 +78,6 @@ def repair_pptx_with_temp_file(pptx_buffer):
                 pass
                 
     except Exception as e:
-        print(f"❌ Advanced PowerPoint repair failed: {e}")
         # Return original buffer if repair fails
         pptx_buffer.seek(0)
         return pptx_buffer
@@ -94,14 +88,12 @@ def repair_pptx_deep_clean(pptx_buffer):
     Most thorough but may lose some formatting
     """
     try:
-        print("🔧 Starting deep PowerPoint repair...")
         
         # Reset buffer position
         pptx_buffer.seek(0)
         
         # Load the corrupted presentation
         source_prs = Presentation(pptx_buffer)
-        print(f"✅ Loaded source presentation with {len(source_prs.slides)} slides")
         
         # Create a completely new presentation
         new_prs = Presentation()
@@ -129,11 +121,9 @@ def repair_pptx_deep_clean(pptx_buffer):
         new_prs.save(repaired_buffer)
         repaired_buffer.seek(0)
         
-        print("✅ Deep PowerPoint repair completed successfully")
         return repaired_buffer
         
     except Exception as e:
-        print(f"❌ Deep PowerPoint repair failed: {e}")
         # Return original buffer if repair fails
         pptx_buffer.seek(0)
         return pptx_buffer
@@ -174,7 +164,7 @@ def copy_slide_content_safe(source_slide, target_slide):
                             table.rows[row_idx].cells[col_idx].text = source_cell.text
         
     except Exception as e:
-        print(f"⚠️ Error copying slide content: {e}")
+        pass
 
 def auto_repair_pptx(pptx_buffer, method="standard"):
     """

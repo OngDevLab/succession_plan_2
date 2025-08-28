@@ -15,6 +15,7 @@ def initialize_state():
     defaults = {
         "app_data": {"incumbent": None, "successors": []},
         "selected_person": None,
+        "current_search_context": None,  # Track whether search was for 'incumbent' or 'successor'
         "search_term": "",
         "editing_incumbent": False,
         "editing_successor_index": None,

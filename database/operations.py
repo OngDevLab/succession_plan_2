@@ -6,6 +6,7 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 import json
+import datetime
 from config.loader import CONFIG
 
 @st.cache_data(show_spinner="Searching database...")
@@ -107,7 +108,6 @@ def get_latest_incumbent_values(employee_id):
         return None
         
     except Exception as e:
-        print(f"Error in get_latest_incumbent_values: {e}")  # Debug print
         return None
 
 def get_latest_successor_values(employee_id):
@@ -152,7 +152,6 @@ def get_latest_successor_values(employee_id):
         return None
         
     except Exception as e:
-        print(f"Error in get_latest_successor_values: {e}")  # Debug print
         return None
 
 def get_latest_successor_values_for_incumbent(successor_employee_id, incumbent_employee_id):
@@ -197,7 +196,6 @@ def get_latest_successor_values_for_incumbent(successor_employee_id, incumbent_e
         return None
         
     except Exception as e:
-        print(f"Error in get_latest_successor_values_for_incumbent: {e}")  # Debug print
         return None
 
 def get_existing_successors_for_incumbent(incumbent_employee_id):
@@ -260,7 +258,6 @@ def get_existing_successors_for_incumbent(incumbent_employee_id):
         return successors
         
     except Exception as e:
-        print(f"Error in get_existing_successors_for_incumbent: {e}")
         return []
 
 def mark_successor_as_removed(incumbent_data, successor_data, plan_details, assessment_details):
@@ -321,8 +318,8 @@ def mark_successor_as_removed(incumbent_data, successor_data, plan_details, asse
         st.error(f"Database error: {e}")
         return None
 
-def save_succession_plan(incumbent_data, successor_data, plan_details, assessment_details):
-    """Save a succession plan record to the database with database-side UUID generation"""
+def save_succession_plan(incumbent_data, successor_data, plan_details, assessment_details, user_access=None, status='saved'):
+    """Save a succession plan record to the database with user tracking"""
     try:
         conn = sqlite3.connect(CONFIG['database']['sqlite']['succession_plans_db'])
         cursor = conn.cursor()
@@ -331,6 +328,11 @@ def save_succession_plan(incumbent_data, successor_data, plan_details, assessmen
         query = CONFIG['queries']['sqlite']['save_succession_plan'].format(
             succession_plans_table=CONFIG['database']['sqlite']['tables']['succession_plans']
         )
+        
+        # Prepare user tracking data
+        user_email = user_access['user_id'] if user_access else 'SYSTEM'
+        user_tier = user_access['tier'] if user_access else 0
+        user_segments = json.dumps(user_access['segments']) if user_access else '[]'
         
         cursor.execute(query, (
             incumbent_data['EMPLOYEE_ID'],
@@ -366,7 +368,12 @@ def save_succession_plan(incumbent_data, successor_data, plan_details, assessmen
             assessment_details['top_ple'],
             assessment_details['development_focus'],
             assessment_details['talent_actions'],
-            False  # REMOVED = FALSE for new records
+            False,  # REMOVED = FALSE for new records
+            status,  # SUBMISSION_STATUS
+            user_email,  # SUBMITTED_BY
+            datetime.datetime.now() if status == 'submitted' else None,  # SUBMITTED_ON
+            user_tier,  # USER_TIER (new field)
+            user_segments  # USER_SEGMENTS (new field)
         ))
         
         # Get the generated RECORD_ID

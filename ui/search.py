@@ -137,6 +137,7 @@ def display_search_results(results, role):
                 st.button(button_text, key=f"select_{role}_{i}", disabled=True)
             elif st.button("Select", key=f"select_{role}_{i}"):
                 st.session_state.selected_person = person
+                st.session_state.current_search_context = role  # Track search context
                 st.session_state.search_term = ""
                 st.rerun()
         st.divider()

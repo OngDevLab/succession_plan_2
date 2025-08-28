@@ -66,6 +66,10 @@ def display_selected_incumbent_card(incumbent, show_button=True):
                 from utils.helpers import force_page_reload
                 force_page_reload()
         with b_col2:
-            if st.button("Edit Details", use_container_width=True, help="Edit the plan details for the current incumbent."):
-                st.session_state.editing_incumbent = True
-                st.rerun()
+            # Only show Edit Details button if NOT in Tier 1 review mode
+            user_access = st.session_state.get('current_user_access')
+            reviewing_submission = st.session_state.get('reviewing_submission')
+            if not (reviewing_submission and user_access and user_access['tier'] == 1):
+                if st.button("Edit Details", use_container_width=True, help="Edit the plan details for the current incumbent."):
+                    st.session_state.editing_incumbent = True
+                    st.rerun()

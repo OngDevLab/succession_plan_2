@@ -9,7 +9,7 @@ from config.loader import SKILLS_LIST, PLE_LIST, CONFIG
 from database.operations import get_latest_incumbent_values, get_latest_successor_values_for_incumbent
 
 # Instead of expandable containers, use @st.dialog for better UX
-@st.dialog("Incumbent Plan Details", width="large", dismissible=False)
+@st.dialog("Incumbent Plan Details", width="large")
 def display_incumbent_form():
     is_editing = st.session_state.get("editing_incumbent", False)
     
@@ -127,7 +127,7 @@ def display_incumbent_form():
                 st.session_state.editing_incumbent = False
                 st.rerun()
 
-@st.dialog("Successor Plan", width="large", dismissible=False)
+@st.dialog("Successor Plan", width="large")
 def display_successor_form():
     is_editing = st.session_state.editing_successor_index is not None
     

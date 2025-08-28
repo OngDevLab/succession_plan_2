@@ -133,9 +133,11 @@ class BackendManager:
     
     def save_succession_plan(self, incumbent_data, successor_data, plan_details, assessment_details):
         """Save succession plan using the selected backend"""
-        # For now, always save to SQLite regardless of selected backend
-        # This preserves existing functionality
-        return save_succession_plan_sqlite(incumbent_data, successor_data, plan_details, assessment_details)
+        backend = self.get_current_backend()
+        if backend == 'snowflake':
+            return save_succession_plan_snowflake(incumbent_data, successor_data, plan_details, assessment_details)
+        else:
+            return save_succession_plan_sqlite(incumbent_data, successor_data, plan_details, assessment_details)
 
 # Create a global instance
 backend_manager = BackendManager()

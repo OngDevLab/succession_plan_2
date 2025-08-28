@@ -89,7 +89,7 @@ database:
     tables:
       incumbents: "HR_EXPLORATORY.HR_DE_SANDBOX.SL_VW_SP_TEST"  # Your Snowflake incumbent table name
       successors: "HR_EXPLORATORY.HR_DE_SANDBOX.SL_VW_SP_TEST"  # Your Snowflake successor table name
-      succession_plans: "SUCCESSION_PLANS"  # For future use
+      succession_plans: "HR_STREAMLIT.SUCCESSION_PLAN.TBL_SL_SUCCESSION_PLAN_DETAIL"
   
   # Search limits (applies to both backends)
   limits:
@@ -307,7 +307,19 @@ queries:
           SUCCESSOR_CONTRACT_END_DATE, SUCCESSOR_STRENGTHS, SUCCESSOR_TOP_SKILLS,
           SUCCESSOR_TOP_PLE, SUCCESSOR_DEVELOPMENT_FOCUS, SUCCESSOR_TALENT_ACTIONS,
           REMOVED
-      ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+      ) VALUES ('{incumbent_employee_id}', '{incumbent_first_name}', '{incumbent_last_name}',
+          '{incumbent_email}', '{incumbent_position}', '{incumbent_management_level}',
+          '{incumbent_job_level}', '{incumbent_segment}',
+          '{critical_role}', '{responsibilities}', '{incumbent_top_skills}', '{incumbent_top_ple}',
+          '{incumbent_contract_end_date}', '{sourcing_strategy}', '{role_type}', '{scenario_plan}',
+          '{new_position_title}',
+          '{successor_employee_id}', '{successor_first_name}', '{successor_last_name}',
+          '{successor_email}', '{successor_position}', '{successor_management_level}',
+          '{successor_job_level}', '{successor_segment}',
+          '{successor_readiness}', '{successor_future_readiness_timing}',
+          '{successor_contract_end_date}', '{successor_strengths}', '{successor_top_skills}',
+          '{successor_top_ple}', '{successor_development_focus}', '{successor_talent_actions}',
+          FALSE)
     
     get_existing_successors_for_incumbent: |
       WITH latest_successors AS (
@@ -346,7 +358,19 @@ queries:
           SUCCESSOR_CONTRACT_END_DATE, SUCCESSOR_STRENGTHS, SUCCESSOR_TOP_SKILLS,
           SUCCESSOR_TOP_PLE, SUCCESSOR_DEVELOPMENT_FOCUS, SUCCESSOR_TALENT_ACTIONS,
           REMOVED
-      ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE)
+      ) VALUES ('{incumbent_employee_id}', '{incumbent_first_name}', '{incumbent_last_name}',
+          '{incumbent_email}', '{incumbent_position}', '{incumbent_management_level}',
+          '{incumbent_job_level}', '{incumbent_segment}',
+          '{critical_role}', '{responsibilities}', '{incumbent_top_skills}', '{incumbent_top_ple}',
+          '{incumbent_contract_end_date}', '{sourcing_strategy}', '{role_type}', '{scenario_plan}',
+          '{new_position_title}',
+          '{successor_employee_id}', '{successor_first_name}', '{successor_last_name}',
+          '{successor_email}', '{successor_position}', '{successor_management_level}',
+          '{successor_job_level}', '{successor_segment}',
+          '{successor_readiness}', '{successor_future_readiness_timing}',
+          '{successor_contract_end_date}', '{successor_strengths}', '{successor_top_skills}',
+          '{successor_top_ple}', '{successor_development_focus}', '{successor_talent_actions}',
+          TRUE)
 
 # UI Configuration
 ui:
